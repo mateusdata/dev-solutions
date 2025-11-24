@@ -63,6 +63,11 @@ Para fazer o emulador funcionar corretamente com placas dedicadas (exemplo com A
 ~/Android/sdk/emulator/emulator -avd Resizable_Experimental -gpu host
 ```
 
+Monitoramento da GPU em tempo real (exemplo com AVD Resizable_Experimental):
+```bash
+watch -n 1 nvidia-smi
+```
+
 ### Utilitários Android
 
 **Gerar Keystore (Debug):**
