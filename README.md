@@ -1,17 +1,17 @@
-# 🐧 Linux & Dev Handbook
+# Linux & Dev Handbook
 
 Um guia de referência rápida para solução de problemas em Linux, desenvolvimento React Native, Docker e configurações de sistema. Este repositório serve como uma base de conhecimento (Knowledge Base) para desenvolvedores e sysadmins.
 
-## 📋 Tabela de Conteúdos
+## Tabela de Conteúdos
 
-- [Desenvolvimento Mobile](#-1-desenvolvimento-mobile-react-native--android)
-- [Docker & Virtualização](#-2-docker--virtualização)
-- [Git & Controle de Versão](#-3-git--controle-de-versão)
-- [Linux System & Terminal](#-4-linux-system--terminal)
-- [Hardware & Armazenamento](#-5-hardware--armazenamento)
-- [Design & Web](#-6-design--web)
+- [Desenvolvimento Mobile](#1-desenvolvimento-mobile-react-native--android)
+- [Docker & Virtualização](#2-docker--virtualização)
+- [Git & Controle de Versão](#3-git--controle-de-versão)
+- [Linux System & Terminal](#4-linux-system--terminal)
+- [Hardware & Armazenamento](#5-hardware--armazenamento)
+- [Design & Web](#6-design--web)
 
-## 📱 1. Desenvolvimento Mobile (React Native & Android)
+## 1. Desenvolvimento Mobile (React Native & Android)
 
 ### Configuração de Ambiente (Android SDK)
 
@@ -58,7 +58,7 @@ gsettings set org.gnome.mutter check-alive-timeout 0
 ```
 
 **Forçar GPU Dedicada (Ex: Nvidia):**
-Para fazer o emulador funcionar corretamente com placas dedicadas (exemplo com AVD Experimental):
+Para fazer o emulador funcionar corretamente com placas dedicadas (exemplo com AVD Resizable_Experimental):
 ```bash
 ~/Android/sdk/emulator/emulator -avd Resizable_Experimental -gpu host
 ```
@@ -81,7 +81,7 @@ Use o `nohup` para rodar o emulador em background, liberando o terminal.
 nohup ~/Android/sdk/emulator/emulator -avd Pixel_4_API_33 & disown
 ```
 
-## 🐳 2. Docker & Virtualização
+## 2. Docker & Virtualização
 
 ### Comandos Essenciais
 
@@ -121,7 +121,7 @@ docker update --memory=8g --memory-swap=8g <container_id>
 ```
 5. Reinicie: `sudo systemctl start docker`
 
-## 🐙 3. Git & Controle de Versão
+## 3. Git & Controle de Versão
 
 ### Configuração SSH (GitLab/GitHub)
 
@@ -156,7 +156,7 @@ git gc --prune=now --aggressive
 git push origin --force --all
 ```
 
-## 🐧 4. Linux System & Terminal
+## 4. Linux System & Terminal
 
 ### Gerenciamento de Shell (Python & Nohup)
 
@@ -209,7 +209,7 @@ WantedBy=multi-user.target
 
 Ative: `sudo systemctl enable wol-enable.service`
 
-## 💾 5. Hardware & Armazenamento
+## 5. Hardware & Armazenamento
 
 ### Montagem Automática de Discos (fstab)
 
@@ -232,6 +232,6 @@ UUID=SEU_UUID_AQUI /media/data/ntfs1 ntfs-3g defaults 0 0
 - Complexo: `hashcat -m 22000 arquivo.hc22000 -a 3 '?l?u?d?l?u?d...' -o saida.txt`
 - Logs: `sudo cat /root/.local/share/hashcat/hashcat.potfile`
 
-## 🎨 6. Design & Web
+## 6. Design & Web
 
-- **Gerador de Gradiente CSS:** [Coolors Gradient Maker](https://coolors.co/gradient-maker)
+- **Next:**
