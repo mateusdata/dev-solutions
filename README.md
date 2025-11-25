@@ -237,6 +237,12 @@ UUID=SEU_UUID_AQUI /media/data/ntfs1 ntfs-3g defaults 0 0
 - Complexo: `hashcat -m 22000 arquivo.hc22000 -a 3 '?l?u?d?l?u?d...' -o saida.txt`
 - Logs: `sudo cat /root/.local/share/hashcat/hashcat.potfile`
 
-## 6. Design & Web
+
+
+## 6. Ubuntu custom
+- Customizar barra de tarefas mo 25.10 Ubuntu dash-to-panel
+- https://github.com/home-sweet-gnome/dash-to-panel
+
+## 7. Design & Web
 
 - **Next:**
