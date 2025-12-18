@@ -9,7 +9,8 @@ Um guia de referência rápida para solução de problemas em Linux, desenvolvim
 - [Git & Controle de Versão](#3-git--controle-de-versão)
 - [Linux System & Terminal](#4-linux-system--terminal)
 - [Hardware & Armazenamento](#5-hardware--armazenamento)
-- [Design & Web](#6-design--web)
+- [Anydesk (Acesso Remoto)](#6-anydesk-acesso-remoto-linux-mint)
+- [Design & Web](#7-design--web)
 
 ## 1. Desenvolvimento Mobile (React Native & Android)
 
@@ -237,11 +238,25 @@ UUID=SEU_UUID_AQUI /media/data/ntfs1 ntfs-3g defaults 0 0
 - Complexo: `hashcat -m 22000 arquivo.hc22000 -a 3 '?l?u?d?l?u?d...' -o saida.txt`
 - Logs: `sudo cat /root/.local/share/hashcat/hashcat.potfile`
 
+## 6. Anydesk (Acesso Remoto Linux Mint)
 
+### Configuração de Acesso Não Supervisionado
 
-## 6. Ubuntu custom
-- Customizar barra de tarefas mo 25.10 Ubuntu dash-to-panel
-- https://github.com/home-sweet-gnome/dash-to-panel
+Para configurar o Anydesk para acesso não supervisionado no Linux Mint, siga os passos abaixo. Caso encontre problemas de interface gráfica (Qt), utilize os comandos conforme indicado.
+
+```bash
+# Permitir acesso ao servidor X
+xhost +
+
+# Abrir configurações administrativas do Anydesk
+anydesk --admin-settings
+
+# Se houver erro de plataforma Qt, use:
+sudo QT_QPA_PLATFORM=xcb anydesk --admin-settings
+```
+
+- Configure a senha de acesso não supervisionado nas configurações administrativas do Anydesk.
+- Certifique-se de que o serviço do Anydesk está ativo e configurado para iniciar com o sistema.
 
 ## 7. Design & Web
 
