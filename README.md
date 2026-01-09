@@ -122,7 +122,7 @@ docker update --memory=8g --memory-swap=8g <container_id>
 4. Edite `/etc/docker/daemon.json`:
 ```json
 {
-   "data-root": "/media/hd-externo/docker"
+    "data-root": "/media/hd-externo/docker"
 }
 ```
 5. Reinicie: `sudo systemctl start docker`
@@ -139,10 +139,10 @@ ssh-keygen -t ed25519 -C "seu.email@dominio.com"
 **Configurar `~/.ssh/config` (Evita conflitos):**
 ```bash
 Host gitlab.com
-   HostName gitlab.com
-   User git
-   IdentityFile ~/.ssh/id_ed25519
-   IdentitiesOnly yes
+    HostName gitlab.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519
+    IdentitiesOnly yes
 ```
 
 ### Limpeza e Manutenção
@@ -184,6 +184,12 @@ O `nohup` mantém o processo rodando após logout.
 - Instalar Server: `sudo apt install openssh-server`
 - Montar Pasta (SSHFS): `sshfs user@servidor:/caminho/remoto ./pasta_local`
 - Correção VS Code SSH: Adicione ao settings.json: `"remote.SSH.useLocalServer": false`
+
+### Pendrives Bootáveis
+
+**Balena Etcher:** Ferramenta para criar pendrives bootáveis (Windows, Linux, etc.)
+- Download: https://etcher.balena.io
+- Use para gravar imagens ISO de forma segura e confiável em dispositivos USB.
 
 ### Truques de Desktop (Gnome/Mint)
 
@@ -261,3 +267,4 @@ sudo QT_QPA_PLATFORM=xcb anydesk --admin-settings
 ## 7. Design & Web
 
 - **Next:**
+
