@@ -59,14 +59,8 @@ gsettings set org.gnome.mutter check-alive-timeout 0
 ```
 
 **Forçar GPU Dedicada (Ex: Nvidia):**
-Para fazer o emulador funcionar corretamente com placas dedicadas (exemplo com AVD Resizable_Experimental):
 ```bash
 ~/Android/sdk/emulator/emulator -avd Resizable_Experimental -gpu host
-```
-
-Monitoramento da GPU em tempo real (exemplo com AVD Resizable_Experimental):
-```bash
-watch -n 1 nvidia-smi
 ```
 
 ### Utilitários Android
@@ -76,13 +70,7 @@ watch -n 1 nvidia-smi
 keytool -genkey -v -keystore ./debug.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias androiddebugkey -storepass android -keypass android
 ```
 
-**Verificar SHA1 da Keystore:**
-```bash
-keytool -list -v -keystore debug.keystore -alias androiddebugkey -storepass android -keypass android
-```
-
 **Lançador Independente (Terminal):**
-Use o `nohup` para rodar o emulador em background, liberando o terminal.
 ```bash
 nohup ~/Android/sdk/emulator/emulator -avd Pixel_4_API_33 & disown
 ```
@@ -97,7 +85,9 @@ nohup ~/Android/sdk/emulator/emulator -avd Pixel_4_API_33 & disown
 | Acessar Shell | `docker exec -it <container_id> /bin/bash` |
 | Logs | `docker logs <container_id>` |
 | Copiar (Host → Container) | `docker cp arquivo.txt <container_id>:/caminho/destino` |
-| Copiar (Container → Host) | `docker cp <container_id>:/caminho/origem ./destino` |
+| Limpar Cache de Build | `docker builder prune -a -f` |
+
+> **Dica:** O comando `docker builder prune -a -f` libera o espaço do cache inútil instantaneamente.
 
 ### Docker OSX (MacOS em Container)
 
@@ -109,30 +99,17 @@ CORES=8
 SMP=8
 ```
 
-**Aumentar memória com container rodando:**
-```bash
-docker update --memory=8g --memory-swap=8g <container_id>
-```
-
-
-**Remover build cache do docker :**
-```bash
-docker builder prune -a -f
-```
-
-
 ### Armazenamento Docker (Mover para HD Externo)
 
 1. Pare o Docker: `sudo systemctl stop docker`
-2. Monte o HD e crie a pasta (Ex: `/media/hd-externo/docker`).
-3. Transfira os dados: `rsync -aP /var/lib/docker/ /media/hd-externo/docker/`
-4. Edite `/etc/docker/daemon.json`:
+2. Transfira os dados: `rsync -aP /var/lib/docker/ /media/hd-externo/docker/`
+3. Edite `/etc/docker/daemon.json`:
 ```json
 {
     "data-root": "/media/hd-externo/docker"
 }
 ```
-5. Reinicie: `sudo systemctl start docker`
+4. Reinicie: `sudo systemctl start docker`
 
 ## 3. Git & Controle de Versão
 
@@ -143,29 +120,13 @@ docker builder prune -a -f
 ssh-keygen -t ed25519 -C "seu.email@dominio.com"
 ```
 
-**Configurar `~/.ssh/config` (Evita conflitos):**
-```bash
-Host gitlab.com
-    HostName gitlab.com
-    User git
-    IdentityFile ~/.ssh/id_ed25519
-    IdentitiesOnly yes
-```
-
 ### Limpeza e Manutenção
 
 **Remover arquivos pesados do histórico (Permanente):**
-⚠️ **Atenção:** Isso reescreve o histórico do Git.
-
 ```bash
-# 1. Reescrever histórico removendo extensões específicas
 git filter-branch --force --index-filter "git rm --cached --ignore-unmatch *.apk *.aab *.img *.jpg *.pdf *.mp4" --prune-empty --tag-name-filter cat -- --all
-
-# 2. Limpar cache e referências antigas
 git reflog expire --expire=now --all
 git gc --prune=now --aggressive
-
-# 3. Forçar envio
 git push origin --force --all
 ```
 
@@ -181,97 +142,48 @@ sudo apt install python3.10 python3.10-venv python3.10-distutils
 curl -sS https://bootstrap.pypa.io/get-pip.py | sudo python3.10
 ```
 
-**Nohup (Processos em Background):**
-O `nohup` mantém o processo rodando após logout.
-- Rodar: `nohup comando > log.out 2>&1 &`
-- Parar: `ps aux | grep comando` seguido de `kill <PID>`
-
 ### SSH & Acesso Remoto
 
 - Instalar Server: `sudo apt install openssh-server`
 - Montar Pasta (SSHFS): `sshfs user@servidor:/caminho/remoto ./pasta_local`
-- Correção VS Code SSH: Adicione ao settings.json: `"remote.SSH.useLocalServer": false`
 
 ### Pendrives Bootáveis
 
-**Balena Etcher:** Ferramenta para criar pendrives bootáveis (Windows, Linux, etc.)
-- Download: https://etcher.balena.io
-- Use para gravar imagens ISO de forma segura e confiável em dispositivos USB.
-
-### Truques de Desktop (Gnome/Mint)
-
-**Fixar Janela (Always on Top):**
-```bash
-wmctrl -r :SELECT: -b add,above
-```
-
-**Criar atalho "Novo Documento" no Nautilus:**
-```bash
-mkdir -p ~/Templates && touch ~/Templates/"Documento Vazio"
-```
-
-**Wake-on-LAN Permanente:**
-Crie `/etc/systemd/system/wol-enable.service`:
-```ini
-[Unit]
-Description=Enable Wake-on-LAN
-After=network.target
-
-[Service]
-Type=oneshot
-ExecStart=/sbin/ethtool -s enp6s0 wol g
-RemainAfterExit=yes
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Ative: `sudo systemctl enable wol-enable.service`
+- **Balena Etcher:** Ferramenta recomendada para criar pendrives bootáveis de forma segura. [Download aqui](https://etcher.balena.io).
 
 ## 5. Hardware & Armazenamento
 
 ### Montagem Automática de Discos (fstab)
 
 1. Descubra o UUID: `sudo blkid`
-2. Crie o ponto de montagem: `sudo mkdir -p /media/data/ntfs1`
-3. Adicione ao `/etc/fstab`:
+2. Adicione ao `/etc/fstab`:
 ```bash
 UUID=SEU_UUID_AQUI /media/data/ntfs1 ntfs-3g defaults 0 0
 ```
-4. Teste: `sudo mount -a`
 
 ### Segurança (BitLocker & Hashcat)
 
-**Windows:** Desativar BitLocker via Regedit
-- Caminho: `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\BitLocker`
-- Chave: `PreventDeviceEncryption` (DWORD = 1)
-
-**Hashcat:**
-- Máscara: `hashcat -m 22000 arquivo.hc22000 -a 3 ?d?d?d?d?d?d?d?d`
-- Complexo: `hashcat -m 22000 arquivo.hc22000 -a 3 '?l?u?d?l?u?d...' -o saida.txt`
-- Logs: `sudo cat /root/.local/share/hashcat/hashcat.potfile`
+**Hashcat (Ataque de Máscara):**
+```bash
+hashcat -m 22000 arquivo.hc22000 -a 3 ?d?d?d?d?d?d?d?d
+```
 
 ## 6. Anydesk (Acesso Remoto Linux Mint)
 
 ### Configuração de Acesso Não Supervisionado
 
-Para configurar o Anydesk para acesso não supervisionado no Linux Mint, siga os passos abaixo. Caso encontre problemas de interface gráfica (Qt), utilize os comandos conforme indicado.
-
 ```bash
 # Permitir acesso ao servidor X
 xhost +
 
-# Abrir configurações administrativas do Anydesk
-anydesk --admin-settings
-
-# Se houver erro de plataforma Qt, use:
+# Abrir configurações administrativas (Correção Qt)
 sudo QT_QPA_PLATFORM=xcb anydesk --admin-settings
 ```
 
-- Configure a senha de acesso não supervisionado nas configurações administrativas do Anydesk.
-- Certifique-se de que o serviço do Anydesk está ativo e configurado para iniciar com o sistema.
-
 ## 7. Design & Web
 
-- **Next:**
-
+- **Next.js:** Framework React focado em performance e SEO.
+```bash
+npx create-next-app@latest
+```
+```
