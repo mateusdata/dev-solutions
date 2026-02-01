@@ -114,6 +114,13 @@ SMP=8
 docker update --memory=8g --memory-swap=8g <container_id>
 ```
 
+
+**Remover build cache do docker :**
+```bash
+docker builder prune -a -f
+```
+
+
 ### Armazenamento Docker (Mover para HD Externo)
 
 1. Pare o Docker: `sudo systemctl stop docker`
