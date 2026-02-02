@@ -84,8 +84,29 @@ nohup ~/Android/sdk/emulator/emulator -avd Pixel_4_API_33 & disown
 | Status (CPU/RAM) | `docker stats <container_id>` |
 | Acessar Shell | `docker exec -it <container_id> /bin/bash` |
 | Logs | `docker logs <container_id>` |
+| Logs (tempo real) | `docker logs -f <container_id>` |
 | Copiar (Host → Container) | `docker cp arquivo.txt <container_id>:/caminho/destino` |
+| Copiar (Container → Host) | `docker cp <container_id>:/caminho/arquivo.txt ./` |
+| Iniciar Container | `docker start <container_id>` |
+| Parar Container | `docker stop <container_id>` |
+| Reiniciar Container | `docker restart <container_id>` |
+| Remover Container | `docker rm <container_id>` |
+| Remover Container (forçado) | `docker rm -f <container_id>` |
+| Listar Containers ativos | `docker ps` |
+| Listar Todos os Containers | `docker ps -a` |
+| Listar Imagens | `docker images` |
+| Remover Imagem | `docker rmi <image_id>` |
+| Ver Uso de Disco | `docker system df` |
 | Limpar Cache de Build | `docker builder prune -a -f` |
+| Limpeza Geral (⚠️ tudo não usado) | `docker system prune -a -f` |
+| Inspecionar Container | `docker inspect <container_id>` |
+| Ver Variáveis de Ambiente | `docker exec <container_id> env` |
+| Ver Portas Expostas | `docker port <container_id>` |
+| Atualizar policy de restart | `docker update --restart=no <container_id>` |
+| Atualizar policy de restart | `docker update --restart=on-failure <container_id>` |
+| Atualizar policy de restart | `docker update --restart=unless-stopped <container_id>` |
+| Ver policy de restart | `docker inspect -f '{{.HostConfig.RestartPolicy.Name}}' <container_id>` |
+
 
 > **Dica:** O comando `docker builder prune -a -f` libera o espaço do cache inútil instantaneamente.
 
