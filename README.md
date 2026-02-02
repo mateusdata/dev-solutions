@@ -79,6 +79,8 @@ nohup ~/Android/sdk/emulator/emulator -avd Pixel_4_API_33 & disown
 
 ### Comandos Essenciais
 
+## Docker – Comandos Úteis (Linux)
+
 | Ação | Comando |
 |------|---------|
 | Status (CPU/RAM) | `docker stats <container_id>` |
@@ -105,7 +107,8 @@ nohup ~/Android/sdk/emulator/emulator -avd Pixel_4_API_33 & disown
 | Atualizar policy de restart | `docker update --restart=no <container_id>` |
 | Atualizar policy de restart | `docker update --restart=on-failure <container_id>` |
 | Atualizar policy de restart | `docker update --restart=unless-stopped <container_id>` |
-| Ver policy de restart | `docker inspect -f '{{.HostConfig.RestartPolicy.Name}}' <container_id>` |
+| Ver restart policy (todos) | `docker inspect $(docker ps -aq) --format '{{.Name}} → {{.HostConfig.RestartPolicy.Name}}'` |
+
 
 
 > **Dica:** O comando `docker builder prune -a -f` libera o espaço do cache inútil instantaneamente.
