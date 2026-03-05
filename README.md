@@ -158,7 +158,10 @@ git push origin --force --all
 
 ### Oh My Zsh Setup
 themes https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-perfect theme bira
+perfect theme bira.
+
+## Reinstalar
+
 **Reinstalar do Zero:**
 ```bash
 uninstall_oh_my_zsh && rm -f ~/.zshrc && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
