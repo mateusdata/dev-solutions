@@ -156,6 +156,26 @@ git push origin --force --all
 
 ## 4. Linux System & Terminal
 
+### Oh My Zsh Setup
+
+**Reinstalar do Zero:**
+```bash
+uninstall_oh_my_zsh && rm -f ~/.zshrc && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+```
+
+**Adicionar Autosuggestions (Linux):**
+```bash
+git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions && sed -i 's/plugins=(git)/plugins=(git zsh-autosuggestions)/' ~/.zshrc && source ~/.zshrc
+```
+
+**Adicionar Autosuggestions (macOS com Homebrew):**
+```bash
+brew install zsh-autosuggestions
+echo 'source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh' >> ~/.zshrc
+source ~/.zshrc
+```
+
+
 ### Gerenciamento de Shell (Python & Nohup)
 
 **Instalação Python 3.10 (Ubuntu):**
