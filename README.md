@@ -180,6 +180,11 @@ source ~/.zshrc
 ```
 
 
+Para seu usuário:
+bashchsh -s $(which zsh)
+Para o root:
+bashsudo chsh -s $(which zsh) root
+
 ### Gerenciamento de Shell (Python & Nohup)
 
 **Instalação Python 3.10 (Ubuntu):**
