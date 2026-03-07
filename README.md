@@ -217,31 +217,50 @@ hashcat -m 22000 arquivo.hc22000 -a 3 ?d?d?d?d?d?d?d?d
 
 O controle conecta via Bluetooth mas o Steam não reconhece porque o BlueZ por padrão exige "bonding" completo para aceitar conexões HID. Controles genéricos e DS4 não fazem esse processo, ficando bloqueados mesmo aparecendo como conectados.
 
-**Solução — edite `/etc/bluetooth/input.conf`:**
+**Solução 1 — Controle não reconhecido pelo Steam**
+
+Edite `/etc/bluetooth/input.conf`:
 
 ```bash
 sudo nano /etc/bluetooth/input.conf
 ```
 
-Localize e mude para:
+Mude para:
 
 ```
 ClassicBondedOnly=false
 ```
 
-Reinicie o Bluetooth e reconecte o controle:
+> **Por quê?** Com `true` (padrão), o BlueZ só aceita dispositivos HID que completaram o processo de bonding. Controles genéricos e DS4 não fazem esse processo, ficando bloqueados mesmo aparecendo como conectados.
+
+**Solução 2 — Controle não reconecta automaticamente**
+
+Edite `/etc/bluetooth/main.conf`:
+
+```bash
+sudo nano /etc/bluetooth/main.conf
+```
+
+Na seção `[Policy]`, deixe assim:
+
+```
+AutoEnable=true
+ReconnectAttempts=7
+ReconnectIntervals=1,2,4,8,16,32,64
+ReconnectUUIDs=00001112-0000-1000-8000-00805f9b34fb,0000111f-0000-1000-8000-00805f9b34fb,0000110a-0000-1000-8000-00805f9b34fb,0000110b-0000-1000-8000-00805f9b34fb
+```
+
+Depois de qualquer alteração, reinicie:
 
 ```bash
 sudo systemctl restart bluetooth
-bluetoothctl trust SEU:MAC:AQUI
-bluetoothctl connect SEU:MAC:AQUI
 ```
 
-Verifique:
+Verifique se o controle foi reconhecido:
 
 ```bash
 ls /dev/input/js*
 # Deve retornar: /dev/input/js0
 ```
 
-> No Linux Mint 23.x isso não é necessário — o padrão já vem configurado de forma permissiva.
+> No Linux Mint 23.x nenhuma dessas configurações é necessária — o padrão já funciona.
