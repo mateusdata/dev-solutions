@@ -10,7 +10,8 @@ Um guia de referência rápida para solução de problemas em Linux, desenvolvim
 - [Linux System & Terminal](#4-linux-system--terminal)
 - [Hardware & Armazenamento](#5-hardware--armazenamento)
 - [Anydesk (Acesso Remoto)](#6-anydesk-acesso-remoto-linux-mint)
-- [Design & Web](#7-design--web)
+- [Bluetooth & Controles](#7-bluetooth--controles)
+- [Design & Web](#8-design--web)
 
 ## 1. Desenvolvimento Mobile (React Native & Android)
 
@@ -181,9 +182,13 @@ source ~/.zshrc
 
 
 Para seu usuário:
-bashchsh -s $(which zsh)
+```bash
+chsh -s $(which zsh)
+```
 Para o root:
-bashsudo chsh -s $(which zsh) root
+```bash
+sudo chsh -s $(which zsh) root
+```
 
 ### Gerenciamento de Shell (Python & Nohup)
 
@@ -203,6 +208,37 @@ curl -sS https://bootstrap.pypa.io/get-pip.py | sudo python3.10
 ### Pendrives Bootáveis
 
 - **Balena Etcher:** Ferramenta recomendada para criar pendrives bootáveis de forma segura. [Download aqui](https://etcher.balena.io).
+
+### Fixar Janela no Topo (Always on Top)
+
+Para deixar qualquer janela sempre visível sobre as outras, use o `wmctrl`:
+
+**Instalar:**
+```bash
+sudo apt install wmctrl
+```
+
+**Fixar a janela selecionada:**
+```bash
+wmctrl -r :SELECT: -b add,above
+```
+
+> Ao rodar o comando, clique na janela que deseja fixar.
+
+**Desfixar:**
+```bash
+wmctrl -r :SELECT: -b remove,above
+```
+
+### Criar Atalhos de Teclado no Linux Mint
+
+1. Abra o **Menu** e pesquise por `Teclado`
+2. Vá na aba **Atalhos de Teclado**
+3. Clique em **Adicionar atalho personalizado**
+4. No campo comando, cole o comando desejado (ex: o `wmctrl` acima)
+5. Clique no campo de tecla e pressione a combinação desejada
+
+> **Dica:** Combinando os dois — crie um atalho de teclado para o comando `wmctrl -r :SELECT: -b add,above` e fixe qualquer janela com um atalho personalizado.
 
 ## 5. Hardware & Armazenamento
 
@@ -233,10 +269,92 @@ xhost +
 sudo QT_QPA_PLATFORM=xcb anydesk --admin-settings
 ```
 
-## 7. Design & Web
+## 7. Bluetooth & Controles
+
+### DualShock 4 (original ou genérico) via Bluetooth no Linux Mint 22.3
+
+> **Contexto:** No Linux Mint 22.3 o controle conecta via Bluetooth normalmente, mas o Steam e o sistema não reconhecem como joystick. Isso acontece porque o BlueZ por padrão exige "bonding" completo para aceitar conexões HID, e controles genéricos (e alguns originais) não fazem esse processo.
+
+#### 1. Carregar os módulos do kernel
+
+```bash
+sudo modprobe hid-sony
+sudo modprobe hid-playstation
+```
+
+#### 2. Adicionar regras de udev
+
+```bash
+sudo nano /etc/udev/rules.d/50-ds4drv.rules
+```
+
+Cole o conteúdo abaixo:
+
+```
+KERNEL=="uinput", MODE="0666"
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="054c", ATTRS{idProduct}=="05c4", MODE="0666"
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="054c", ATTRS{idProduct}=="09cc", MODE="0666"
+```
+
+Recarregue as regras:
+
+```bash
+sudo udevadm control --reload-rules && sudo udevadm trigger
+```
+
+#### 3. Desativar restrição de bonding no BlueZ
+
+Edite o arquivo de configuração do input:
+
+```bash
+sudo nano /etc/bluetooth/input.conf
+```
+
+Localize a linha:
+```
+#ClassicBondedOnly=true
+```
+
+Mude para:
+```
+ClassicBondedOnly=false
+```
+
+> **Por quê?** Com `true` (padrão), o BlueZ só aceita dispositivos HID que completaram o processo de bonding com troca de chaves de segurança. Controles genéricos e DS4 não fazem esse processo corretamente, ficando bloqueados mesmo conectados.
+
+#### 4. Reiniciar o serviço Bluetooth
+
+```bash
+sudo systemctl restart bluetooth
+```
+
+#### 5. Confiar no dispositivo e conectar
+
+```bash
+bluetoothctl trust SEU:MAC:AQUI
+bluetoothctl connect SEU:MAC:AQUI
+```
+
+> Para descobrir o MAC: `bluetoothctl devices`
+
+#### 6. Verificar se funcionou
+
+```bash
+ls /dev/input/js*
+# Deve retornar: /dev/input/js0
+```
+
+Se aparecer `js0`, o controle foi reconhecido com sucesso. Abra o Steam e ele deve aparecer automaticamente.
+
+#### Observações
+
+- No **Linux Mint 23.x** isso não é necessário pois o padrão do BlueZ já vem configurado de forma mais permissiva.
+- Controles genéricos que se identificam como Sony DS4 (`usb:v054Cp09CC`) são suportados pelo módulo `hid_playstation` e podem mudar de cor ao conectar — isso é normal e indica que o módulo assumiu o controle corretamente.
+- Para verificar o ID do dispositivo: `bluetoothctl info SEU:MAC:AQUI | grep Modalias`
+
+## 8. Design & Web
 
 - **Next.js:** Framework React focado em performance e SEO.
 ```bash
 npx create-next-app@latest
-```
 ```
