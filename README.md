@@ -1,153 +1,129 @@
 # Linux & Dev Handbook
 
-Um guia de referência rápida para solução de problemas em Linux, desenvolvimento React Native, Docker e configurações de sistema. Este repositório serve como uma base de conhecimento (Knowledge Base) para desenvolvedores e sysadmins.
-
 ## Tabela de Conteúdos
 
-- [Desenvolvimento Mobile](#1-desenvolvimento-mobile-react-native--android)
-- [Docker & Virtualização](#2-docker--virtualização)
-- [Git & Controle de Versão](#3-git--controle-de-versão)
-- [Linux System & Terminal](#4-linux-system--terminal)
-- [Hardware & Armazenamento](#5-hardware--armazenamento)
-- [Anydesk (Acesso Remoto)](#6-anydesk-acesso-remoto-linux-mint)
-- [Bluetooth & Controles](#7-bluetooth--controles)
-- [Design & Web](#8-design--web)
+1. [Mobile Android](#1-mobile-android)
+2. [Docker](#2-docker)
+3. [Git](#3-git)
+4. [Linux](#4-linux)
+5. [Hardware & Armazenamento](#5-hardware--armazenamento)
+6. [Bluetooth & Controles](#6-bluetooth--controles)
 
-## 1. Desenvolvimento Mobile (React Native & Android)
+---
 
-### Configuração de Ambiente (Android SDK)
+## 1. Mobile Android
 
-Adicione estas linhas ao seu arquivo de configuração de shell (`~/.bashrc`, `~/.zshrc` ou `~/.config/fish/config.fish`).
+### Android SDK no Zsh
 
-**Bash / Zsh:**
+Adicione ao `~/.zshrc`:
+
 ```bash
-export ANDROID_HOME=$HOME/Android/sdk
+export ANDROID_HOME=$HOME/Android/Sdk
 export PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
 ```
 
-**Fish Shell:**
+### Alias — Liberar RAM
+
 ```bash
-set -Ux ANDROID_HOME $HOME/Android/sdk
-set -Ux PATH $PATH $ANDROID_HOME/tools $ANDROID_HOME/platform-tools
+alias lp='sudo sync && echo 3 | sudo tee /proc/sys/vm/drop_caches'
 ```
 
-### Builds com Expo (EAS)
+---
 
-**Build Local:**
+## 2. Docker
+
+### Limpeza de Cache
+
 ```bash
-# Android (com medição de tempo)
-time eas build --local --platform android --profile preview
-
-# iOS
-eas build --local --platform ios --profile preview
+docker builder prune -a -f
 ```
 
-**Build via Servidor Expo:**
+> Libera o espaço do cache de build inútil instantaneamente.
+
+### Docker no HD Externo
+
+O Docker é composto por dois serviços independentes que precisam ser configurados separadamente: o **dockerd** e o **containerd**. Se você configurar apenas um deles, o outro continuará gravando no SSD sem que você perceba.
+
+> ⚠️ **Atenção ao caminho de montagem:** O Linux às vezes cria dois diretórios com nomes quase idênticos em `/media/data/` — por exemplo `...fab` e `...fab1`. Sempre verifique com `df -h` qual é o caminho real onde o HD está montado antes de configurar qualquer coisa. Apontar o Docker para o caminho errado faz ele gravar silenciosamente no SSD.
+
+**1. Verificar onde o HD está montado:**
+
 ```bash
-eas build -p android --profile preview
+df -h
 ```
 
-### Solução de Erros Comuns
+**2. Parar os serviços:**
 
-**Erro Gradle / Java Version:** Se ocorrer erro de `compileReleaseJavaWithJavac`, atualize o Java (Geralmente do JDK 11 para 17).
 ```bash
-sudo apt update && sudo apt install openjdk-17-jdk
+sudo systemctl stop docker docker.socket containerd
 ```
 
-**Emulador travando (Check Alive Timeout):** Remove o erro de "App is not responding" no GNOME.
+**3. Configurar o Docker — edite `/etc/docker/daemon.json`:**
+
 ```bash
-gsettings set org.gnome.mutter check-alive-timeout 0
+sudo nano /etc/docker/daemon.json
 ```
 
-**Forçar GPU Dedicada (Ex: Nvidia):**
-```bash
-~/Android/sdk/emulator/emulator -avd Resizable_Experimental -gpu host
-```
-
-### Utilitários Android
-
-**Gerar Keystore (Debug):**
-```bash
-keytool -genkey -v -keystore ./debug.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias androiddebugkey -storepass android -keypass android
-```
-
-**Lançador Independente (Terminal):**
-```bash
-nohup ~/Android/sdk/emulator/emulator -avd Pixel_4_API_33 & disown
-```
-
-## 2. Docker & Virtualização
-
-### Comandos Essenciais
-
-## Docker – Comandos Úteis (Linux)
-
-| Ação | Comando |
-|------|---------|
-| Status (CPU/RAM) | `docker stats <container_id>` |
-| Acessar Shell | `docker exec -it <container_id> /bin/bash` |
-| Logs | `docker logs <container_id>` |
-| Logs (tempo real) | `docker logs -f <container_id>` |
-| Copiar (Host → Container) | `docker cp arquivo.txt <container_id>:/caminho/destino` |
-| Copiar (Container → Host) | `docker cp <container_id>:/caminho/arquivo.txt ./` |
-| Iniciar Container | `docker start <container_id>` |
-| Parar Container | `docker stop <container_id>` |
-| Reiniciar Container | `docker restart <container_id>` |
-| Remover Container | `docker rm <container_id>` |
-| Remover Container (forçado) | `docker rm -f <container_id>` |
-| Listar Containers ativos | `docker ps` |
-| Listar Todos os Containers | `docker ps -a` |
-| Listar Imagens | `docker images` |
-| Remover Imagem | `docker rmi <image_id>` |
-| Ver Uso de Disco | `docker system df` |
-| Limpar Cache de Build | `docker builder prune -a -f` |
-| Limpeza Geral (⚠️ tudo não usado) | `docker system prune -a -f` |
-| Inspecionar Container | `docker inspect <container_id>` |
-| Ver Variáveis de Ambiente | `docker exec <container_id> env` |
-| Ver Portas Expostas | `docker port <container_id>` |
-| Atualizar policy de restart | `docker update --restart=no <container_id>` |
-| Atualizar policy de restart | `docker update --restart=on-failure <container_id>` |
-| Atualizar policy de restart | `docker update --restart=unless-stopped <container_id>` |
-| Ver restart policy (todos) | `docker inspect $(docker ps -aq) --format '{{.Name}} → {{.HostConfig.RestartPolicy.Name}}'` |
-
-
-
-> **Dica:** O comando `docker builder prune -a -f` libera o espaço do cache inútil instantaneamente.
-
-### Docker OSX (MacOS em Container)
-
-**Otimização de Performance:**
-Edite o script de launch (`Launch.sh`):
-```bash
-RAM=16
-CORES=8
-SMP=8
-```
-
-### Armazenamento Docker (Mover para HD Externo)
-
-1. Pare o Docker: `sudo systemctl stop docker`
-2. Transfira os dados: `rsync -aP /var/lib/docker/ /media/hd-externo/docker/`
-3. Edite `/etc/docker/daemon.json`:
 ```json
 {
-    "data-root": "/media/hd-externo/docker"
+  "data-root": "/media/data/SEU-UUID-AQUI/docker"
 }
 ```
-4. Reinicie: `sudo systemctl start docker`
 
-## 3. Git & Controle de Versão
+**4. Configurar o containerd — gere e edite o `config.toml`:**
 
-### Configuração SSH (GitLab/GitHub)
+```bash
+sudo mkdir -p /etc/containerd
+containerd config default | sudo tee /etc/containerd/config.toml
+sudo nano /etc/containerd/config.toml
+```
 
-**Gerar Chave Ed25519:**
+Altere a linha `root` para:
+
+```
+root = "/media/data/SEU-UUID-AQUI/containerd"
+```
+
+> Deixe a variável `state` como está — ela aponta para `/run/containerd` (memória RAM) e não deve ser alterada.
+
+**5. Mover os dados existentes para o HD (se necessário):**
+
+```bash
+sudo rsync -aP /var/lib/docker/ /media/data/SEU-UUID-AQUI/docker/
+sudo rsync -aP /var/lib/containerd/ /media/data/SEU-UUID-AQUI/containerd/
+```
+
+**6. Iniciar os serviços:**
+
+```bash
+sudo systemctl start containerd && sudo systemctl start docker
+```
+
+**7. Confirmar:**
+
+```bash
+docker info | grep "Docker Root Dir"
+```
+
+**8. Apagar as pastas antigas do SSD (após confirmar que está funcionando):**
+
+```bash
+sudo rm -rf /var/lib/docker
+sudo rm -rf /var/lib/containerd
+```
+
+---
+
+## 3. Git
+
+### SSH
+
 ```bash
 ssh-keygen -t ed25519 -C "seu.email@dominio.com"
 ```
 
-### Limpeza e Manutenção
+### Remover Arquivos Pesados do Histórico
 
-**Remover arquivos pesados do histórico (Permanente):**
 ```bash
 git filter-branch --force --index-filter "git rm --cached --ignore-unmatch *.apk *.aab *.img *.jpg *.pdf *.mp4" --prune-empty --tag-name-filter cat -- --all
 git reflog expire --expire=now --all
@@ -155,206 +131,117 @@ git gc --prune=now --aggressive
 git push origin --force --all
 ```
 
-## 4. Linux System & Terminal
+---
 
-### Oh My Zsh Setup
-themes https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-perfect theme bira.
+## 4. Linux
 
-## Reinstalar
+### Oh My Zsh
 
-**Reinstalar do Zero:**
+Themes: https://github.com/ohmyzsh/ohmyzsh/wiki/Themes — tema recomendado: `bira`
+
+**Reinstalar do zero:**
+
 ```bash
 uninstall_oh_my_zsh && rm -f ~/.zshrc && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 ```
 
-**Adicionar Autosuggestions (Linux):**
+**Autosuggestions:**
+
 ```bash
 git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions && sed -i 's/plugins=(git)/plugins=(git zsh-autosuggestions)/' ~/.zshrc && source ~/.zshrc
 ```
 
-**Adicionar Autosuggestions (macOS com Homebrew):**
-```bash
-brew install zsh-autosuggestions
-echo 'source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh' >> ~/.zshrc
-source ~/.zshrc
-```
+**Mudar shell padrão:**
 
-
-Para seu usuário:
 ```bash
 chsh -s $(which zsh)
-```
-Para o root:
-```bash
 sudo chsh -s $(which zsh) root
-```
-
-### Gerenciamento de Shell (Python & Nohup)
-
-**Instalação Python 3.10 (Ubuntu):**
-```bash
-sudo add-apt-repository ppa:deadsnakes/ppa
-sudo apt update
-sudo apt install python3.10 python3.10-venv python3.10-distutils
-curl -sS https://bootstrap.pypa.io/get-pip.py | sudo python3.10
 ```
 
 ### SSH & Acesso Remoto
 
-- Instalar Server: `sudo apt install openssh-server`
-- Montar Pasta (SSHFS): `sshfs user@servidor:/caminho/remoto ./pasta_local`
+```bash
+sudo apt install openssh-server
+sshfs user@servidor:/caminho/remoto ./pasta_local
+```
 
-### Pendrives Bootáveis
+### Pendrive Bootável
 
-- **Balena Etcher:** Ferramenta recomendada para criar pendrives bootáveis de forma segura. [Download aqui](https://etcher.balena.io).
+**Balena Etcher** — recomendado: [etcher.balena.io](https://etcher.balena.io)
 
-### Fixar Janela no Topo (Always on Top)
+### Fixar Janela no Topo
 
-Para deixar qualquer janela sempre visível sobre as outras, use o `wmctrl`:
-
-**Instalar:**
 ```bash
 sudo apt install wmctrl
+wmctrl -r :SELECT: -b add,above     # fixar
+wmctrl -r :SELECT: -b remove,above  # desfixar
 ```
 
-**Fixar a janela selecionada:**
-```bash
-wmctrl -r :SELECT: -b add,above
-```
+### Atalhos de Teclado no Linux Mint
 
-> Ao rodar o comando, clique na janela que deseja fixar.
-
-**Desfixar:**
-```bash
-wmctrl -r :SELECT: -b remove,above
-```
-
-### Criar Atalhos de Teclado no Linux Mint
-
-1. Abra o **Menu** e pesquise por `Teclado`
-2. Vá na aba **Atalhos de Teclado**
+1. Menu → pesquise `Teclado`
+2. Aba **Atalhos de Teclado**
 3. Clique em **Adicionar atalho personalizado**
-4. No campo comando, cole o comando desejado (ex: o `wmctrl` acima)
-5. Clique no campo de tecla e pressione a combinação desejada
+4. Cole o comando desejado e defina a tecla
 
-> **Dica:** Combinando os dois — crie um atalho de teclado para o comando `wmctrl -r :SELECT: -b add,above` e fixe qualquer janela com um atalho personalizado.
+> **Dica:** Combine com o `wmctrl` acima para fixar janelas com um atalho.
+
+---
 
 ## 5. Hardware & Armazenamento
 
-### Montagem Automática de Discos (fstab)
+### Montagem Automática de Discos
 
-1. Descubra o UUID: `sudo blkid`
-2. Adicione ao `/etc/fstab`:
 ```bash
-UUID=SEU_UUID_AQUI /media/data/ntfs1 ntfs-3g defaults 0 0
+sudo blkid  # descobrir UUID
+sudo nano /etc/fstab
 ```
 
-### Segurança (BitLocker & Hashcat)
+Adicione a linha:
 
-**Hashcat (Ataque de Máscara):**
+```
+UUID=SEU_UUID_AQUI /media/data/meu-hd ext4 defaults,nofail 0 2
+```
+
+### Hashcat
+
 ```bash
 hashcat -m 22000 arquivo.hc22000 -a 3 ?d?d?d?d?d?d?d?d
 ```
 
-## 6. Anydesk (Acesso Remoto Linux Mint)
+---
 
-### Configuração de Acesso Não Supervisionado
+## 6. Bluetooth & Controles
 
-```bash
-# Permitir acesso ao servidor X
-xhost +
+### DualShock 4 no Linux Mint 22.3
 
-# Abrir configurações administrativas (Correção Qt)
-sudo QT_QPA_PLATFORM=xcb anydesk --admin-settings
-```
+O controle conecta via Bluetooth mas o Steam não reconhece porque o BlueZ por padrão exige "bonding" completo para aceitar conexões HID. Controles genéricos e DS4 não fazem esse processo, ficando bloqueados mesmo aparecendo como conectados.
 
-## 7. Bluetooth & Controles
-
-### DualShock 4 (original ou genérico) via Bluetooth no Linux Mint 22.3
-
-> **Contexto:** No Linux Mint 22.3 o controle conecta via Bluetooth normalmente, mas o Steam e o sistema não reconhecem como joystick. Isso acontece porque o BlueZ por padrão exige "bonding" completo para aceitar conexões HID, e controles genéricos (e alguns originais) não fazem esse processo.
-
-#### 1. Carregar os módulos do kernel
-
-```bash
-sudo modprobe hid-sony
-sudo modprobe hid-playstation
-```
-
-#### 2. Adicionar regras de udev
-
-```bash
-sudo nano /etc/udev/rules.d/50-ds4drv.rules
-```
-
-Cole o conteúdo abaixo:
-
-```
-KERNEL=="uinput", MODE="0666"
-KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="054c", ATTRS{idProduct}=="05c4", MODE="0666"
-KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="054c", ATTRS{idProduct}=="09cc", MODE="0666"
-```
-
-Recarregue as regras:
-
-```bash
-sudo udevadm control --reload-rules && sudo udevadm trigger
-```
-
-#### 3. Desativar restrição de bonding no BlueZ
-
-Edite o arquivo de configuração do input:
+**Solução — edite `/etc/bluetooth/input.conf`:**
 
 ```bash
 sudo nano /etc/bluetooth/input.conf
 ```
 
-Localize a linha:
-```
-#ClassicBondedOnly=true
-```
+Localize e mude para:
 
-Mude para:
 ```
 ClassicBondedOnly=false
 ```
 
-> **Por quê?** Com `true` (padrão), o BlueZ só aceita dispositivos HID que completaram o processo de bonding com troca de chaves de segurança. Controles genéricos e DS4 não fazem esse processo corretamente, ficando bloqueados mesmo conectados.
-
-#### 4. Reiniciar o serviço Bluetooth
+Reinicie o Bluetooth e reconecte o controle:
 
 ```bash
 sudo systemctl restart bluetooth
-```
-
-#### 5. Confiar no dispositivo e conectar
-
-```bash
 bluetoothctl trust SEU:MAC:AQUI
 bluetoothctl connect SEU:MAC:AQUI
 ```
 
-> Para descobrir o MAC: `bluetoothctl devices`
-
-#### 6. Verificar se funcionou
+Verifique:
 
 ```bash
 ls /dev/input/js*
 # Deve retornar: /dev/input/js0
 ```
 
-Se aparecer `js0`, o controle foi reconhecido com sucesso. Abra o Steam e ele deve aparecer automaticamente.
-
-#### Observações
-
-- No **Linux Mint 23.x** isso não é necessário pois o padrão do BlueZ já vem configurado de forma mais permissiva.
-- Controles genéricos que se identificam como Sony DS4 (`usb:v054Cp09CC`) são suportados pelo módulo `hid_playstation` e podem mudar de cor ao conectar — isso é normal e indica que o módulo assumiu o controle corretamente.
-- Para verificar o ID do dispositivo: `bluetoothctl info SEU:MAC:AQUI | grep Modalias`
-
-## 8. Design & Web
-
-- **Next.js:** Framework React focado em performance e SEO.
-```bash
-npx create-next-app@latest
-```
+> No Linux Mint 23.x isso não é necessário — o padrão já vem configurado de forma permissiva.
