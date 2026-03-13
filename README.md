@@ -1,13 +1,45 @@
 # Linux & Dev Handbook
 
+> Referência pessoal de setup, configurações e troubleshooting.
+
+---
+
 ## Tabela de Conteúdos
 
-1. [Mobile](#1-mobile)
-2. [Docker](#2-docker)
-3. [Git](#3-git)
-4. [Linux](#4-linux)
-5. [Hardware & Armazenamento](#5-hardware--armazenamento)
-6. [Bluetooth & Controles](#6-bluetooth--controles)
+### Setup & Configuração
+
+- [1. Mobile](#1-mobile)
+  - [Android SDK no Zsh](#android-sdk-no-zsh)
+  - [Alias — Liberar RAM](#alias--liberar-ram)
+- [2. Docker](#2-docker)
+  - [Limpeza de Cache](#limpeza-de-cache)
+  - [Docker no HD Externo](#docker-no-hd-externo)
+- [3. Git](#3-git)
+  - [SSH](#ssh)
+  - [Remover Arquivos Pesados do Histórico](#remover-arquivos-pesados-do-histórico)
+- [4. Linux](#4-linux)
+  - [Oh My Zsh](#oh-my-zsh)
+  - [SSH & Acesso Remoto](#ssh--acesso-remoto)
+  - [Pendrive Bootável](#pendrive-bootável)
+  - [Fixar Janela no Topo](#fixar-janela-no-topo)
+  - [Atalhos de Teclado no Linux Mint](#atalhos-de-teclado-no-linux-mint)
+- [5. Hardware & Armazenamento](#5-hardware--armazenamento)
+  - [Montagem Automática de Discos](#montagem-automática-de-discos)
+  - [Hashcat](#hashcat)
+- [6. Bluetooth & Controles](#6-bluetooth--controles)
+  - [DualShock 4 no Linux Mint](#dualshock-4-no-linux-mint-223)
+
+### Troubleshooting
+
+- [7. Mobile](#7-mobile-troubleshooting)
+  - [Emulador travando com "Not Responding"](#emulador-travando-com-emulator-is-not-responding)
+  - [JAVA_HOME não configurado](#java_home-não-configurado)
+- [8. Linux](#8-linux-troubleshooting)
+  - [PATH quebrado — sudo e apt não encontrados](#path-quebrado--sudo-e-apt-não-encontrados)
+
+---
+
+## Setup & Configuração
 
 ---
 
@@ -27,34 +59,6 @@ export PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
 ```bash
 alias lp='sudo sync && echo 3 | sudo tee /proc/sys/vm/drop_caches'
 ```
-
-### Emulador travando com "Emulator is Not Responding"
-
-**Problema:** O emulador exibe a mensagem "Emulator is Not Responding" e trava constantemente, mesmo com hardware potente.
-
-**Causa:** O `hw.gpu.mode=auto` faz o emulador hesitar entre software rendering e GPU real, às vezes caindo para emulação por software e ignorando a GPU dedicada.
-
-**Solução:** Abra o `config.ini` do AVD e altere a propriedade `hw.gpu.mode` de `auto` para `host`:
-
-```bash
-nano ~/.android/avd/NOME_DO_SEU_AVD.avd/config.ini
-```
-
-Localize e altere:
-
-```
-hw.gpu.mode=auto
-```
-
-Para:
-
-```
-hw.gpu.mode=host
-```
-
-Salve com **Ctrl+O** → Enter → **Ctrl+X**, feche e reabra o emulador.
-
-> Com `host`, o emulador usa diretamente a GPU real do sistema, eliminando os travamentos causados pela renderização por software.
 
 ---
 
@@ -298,3 +302,101 @@ ls /dev/input/js*
 ```
 
 > No Linux Mint 23.x nenhuma dessas configurações é necessária — o padrão já funciona.
+
+---
+
+## Troubleshooting
+
+---
+
+## 7. Mobile Troubleshooting
+
+### Emulador travando com "Emulator is Not Responding"
+
+**Problema:** O emulador exibe a mensagem "Emulator is Not Responding" e trava constantemente, mesmo com hardware potente.
+
+**Causa:** O `hw.gpu.mode=auto` faz o emulador hesitar entre software rendering e GPU real, ignorando a GPU dedicada e causando travamentos.
+
+**Solução:** Abra o `config.ini` do AVD:
+
+```bash
+nano ~/.android/avd/NOME_DO_SEU_AVD.avd/config.ini
+```
+
+Localize e altere:
+
+```
+hw.gpu.mode=auto
+```
+
+Para:
+
+```
+hw.gpu.mode=host
+```
+
+Salve com **Ctrl+O** → Enter → **Ctrl+X**, feche e reabra o emulador.
+
+> Com `host`, o emulador usa diretamente a GPU real do sistema, eliminando os travamentos causados pela renderização por software.
+
+---
+
+### JAVA_HOME não configurado
+
+**Problema:**
+
+```
+ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
+```
+
+**Solução:**
+
+1. Instale o Java caso não tenha:
+
+```bash
+sudo apt install openjdk-17-jdk
+```
+
+2. Adicione ao `~/.zshrc` ou `~/.bashrc`:
+
+```bash
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+export PATH=$JAVA_HOME/bin:$PATH
+```
+
+3. Aplique:
+
+```bash
+source ~/.zshrc
+java -version
+```
+
+> Se o caminho não existir, verifique com `find /usr/lib/jvm -maxdepth 1 -type d` qual versão está instalada.
+
+---
+
+## 8. Linux Troubleshooting
+
+### PATH quebrado — sudo e apt não encontrados
+
+**Problema:** Após um `apt autoremove` acidental, comandos como `sudo`, `apt` e `su` param de funcionar com `command not found`.
+
+**Causa:** O autoremove removeu dependências essenciais do sistema em cascata.
+
+**Solução:**
+
+1. Restaure o PATH da sessão atual:
+
+```bash
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
+```
+
+2. Reinstale os pacotes essenciais usando o caminho completo:
+
+```bash
+/usr/bin/sudo /usr/bin/apt install ubuntu-desktop gnome-session gnome-shell
+```
+
+3. Reinicie o sistema após a instalação.
+
+> ⚠️ **Prevenção:** Nunca confirme um `apt autoremove` sem revisar a lista completa do que será removido. Se aparecer `gnome-session`, `gnome-shell` ou `xwayland` na lista, cancele com `n`.
