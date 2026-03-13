@@ -2,7 +2,7 @@
 
 ## Tabela de Conteúdos
 
-1. [Mobile Android](#1-mobile-android)
+1. [Mobile](#1-mobile)
 2. [Docker](#2-docker)
 3. [Git](#3-git)
 4. [Linux](#4-linux)
@@ -11,7 +11,7 @@
 
 ---
 
-## 1. Mobile Android
+## 1. Mobile
 
 ### Android SDK no Zsh
 
@@ -27,6 +27,34 @@ export PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
 ```bash
 alias lp='sudo sync && echo 3 | sudo tee /proc/sys/vm/drop_caches'
 ```
+
+### Emulador travando com "Emulator is Not Responding"
+
+**Problema:** O emulador exibe a mensagem "Emulator is Not Responding" e trava constantemente, mesmo com hardware potente.
+
+**Causa:** O `hw.gpu.mode=auto` faz o emulador hesitar entre software rendering e GPU real, às vezes caindo para emulação por software e ignorando a GPU dedicada.
+
+**Solução:** Abra o `config.ini` do AVD e altere a propriedade `hw.gpu.mode` de `auto` para `host`:
+
+```bash
+nano ~/.android/avd/NOME_DO_SEU_AVD.avd/config.ini
+```
+
+Localize e altere:
+
+```
+hw.gpu.mode=auto
+```
+
+Para:
+
+```
+hw.gpu.mode=host
+```
+
+Salve com **Ctrl+O** → Enter → **Ctrl+X**, feche e reabra o emulador.
+
+> Com `host`, o emulador usa diretamente a GPU real do sistema, eliminando os travamentos causados pela renderização por software.
 
 ---
 
@@ -151,8 +179,7 @@ uninstall_oh_my_zsh && rm -f ~/.zshrc && sh -c "$(curl -fsSL https://raw.githubu
 git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions && sed -i 's/plugins=(git)/plugins=(git zsh-autosuggestions)/' ~/.zshrc && source ~/.zshrc
 ```
 
-macos
-
+macOS:
 
 ```bash
 git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions && sed -i '' 's/plugins=(git)/plugins=(git zsh-autosuggestions)/' ~/.zshrc && source ~/.zshrc
