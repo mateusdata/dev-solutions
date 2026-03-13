@@ -76,8 +76,6 @@ docker builder prune -a -f
 
 O Docker é composto por dois serviços independentes que precisam ser configurados separadamente: o **dockerd** e o **containerd**. Se você configurar apenas um deles, o outro continuará gravando no SSD sem que você perceba.
 
-> ⚠️ **Atenção ao caminho de montagem:** O Linux às vezes cria dois diretórios com nomes quase idênticos em `/media/data/` — por exemplo `...fab` e `...fab1`. Sempre verifique com `df -h` qual é o caminho real onde o HD está montado antes de configurar qualquer coisa. Apontar o Docker para o caminho errado faz ele gravar silenciosamente no SSD.
-
 **1. Verificar onde o HD está montado:**
 
 ```bash
