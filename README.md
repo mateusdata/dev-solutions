@@ -315,8 +315,22 @@ ls /dev/input/js*
 
 **Causa:** O `hw.gpu.mode=auto` faz o emulador hesitar entre software rendering e GPU real, ignorando a GPU dedicada e causando travamentos.
 
-**Solução:** Abra o `config.ini` do AVD:
+**Solução1:** Aumentar o timeout de janelas do gnome:
 
+Desativar completamente (0):
+```bash
+bashgsettings set org.gnome.mutter check-alive-timeout 0
+```
+Voltar pra 20 segundos:
+```bash
+bashgsettings set org.gnome.mutter check-alive-timeout 20000
+```
+Verificar qual tá ativo agora:
+```bash
+bashgsettings get org.gnome.mutter check-alive-timeout
+
+```
+**Solução2:** Abra o `config.ini` do AVD:
 ```bash
 nano ~/.android/avd/NOME_DO_SEU_AVD.avd/config.ini
 ```
@@ -341,6 +355,7 @@ sudo usermod -aG kvm $USER
 # Confirmar
 groups
 > Com `host`, o emulador usa diretamente a GPU real do sistema, eliminando os travamentos causados pela renderização por software.
+
 
 ---
 
