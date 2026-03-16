@@ -335,6 +335,11 @@ hw.gpu.mode=host
 
 Salve com **Ctrl+O** → Enter → **Ctrl+X**, feche e reabra o emulador.
 
+# Adicionar ao grupo kvm
+sudo usermod -aG kvm $USER
+
+# Confirmar
+groups
 > Com `host`, o emulador usa diretamente a GPU real do sistema, eliminando os travamentos causados pela renderização por software.
 
 ---
