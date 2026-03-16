@@ -319,15 +319,15 @@ ls /dev/input/js*
 
 Desativar completamente (0):
 ```bash
-bashgsettings set org.gnome.mutter check-alive-timeout 0
+gsettings set org.gnome.mutter check-alive-timeout 0
 ```
 Voltar pra 20 segundos:
 ```bash
-bashgsettings set org.gnome.mutter check-alive-timeout 20000
+gsettings set org.gnome.mutter check-alive-timeout 20000
 ```
 Verificar qual tá ativo agora:
 ```bash
-bashgsettings get org.gnome.mutter check-alive-timeout
+gsettings get org.gnome.mutter check-alive-timeout
 
 ```
 **Solução2:** Abra o `config.ini` do AVD:
