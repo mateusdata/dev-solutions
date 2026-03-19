@@ -112,6 +112,7 @@ Altere a linha `root` para:
 
 ```
 root = "/media/data/SEU-UUID-AQUI/containerd"
+UUID=youruuid /run/media/data/hd-externo-1tb ext4 defaults,nofail 0 2
 ```
 
 > Deixe a variável `state` como está — ela aponta para `/run/containerd` (memória RAM) e não deve ser alterada.
