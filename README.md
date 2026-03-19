@@ -235,7 +235,8 @@ sudo nano /etc/fstab
 Adicione a linha:
 
 ```
-UUID=SEU_UUID_AQUI /media/data/meu-hd ext4 defaults,nofail 0 2
+UUID=your_UUID /run/media/data/hd-externo-1tb ext4 defaults,nofail 0 2
+
 ```
 
 ### Hashcat
