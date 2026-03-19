@@ -65,7 +65,6 @@ alias lp='sudo sync && echo 3 | sudo tee /proc/sys/vm/drop_caches'
 ## 2. Docker
 
 ### Limpeza de Cache
-
 ```bash
 docker system prune -a --volumes -f && docker builder prune -a -f 
 ```
@@ -77,31 +76,32 @@ docker system prune -a --volumes -f && docker builder prune -a -f
 O Docker é composto por dois serviços independentes que precisam ser configurados separadamente: o **dockerd** e o **containerd**. Se você configurar apenas um deles, o outro continuará gravando no SSD sem que você perceba.
 
 **1. Verificar onde o HD está montado:**
-
 ```bash
 df -h
 ```
 
 **2. Parar os serviços:**
-
 ```bash
 sudo systemctl stop docker docker.socket containerd
 ```
 
 **3. Configurar o Docker — edite `/etc/docker/daemon.json`:**
-
 ```bash
 sudo nano /etc/docker/daemon.json
 ```
-
 ```json
 {
-  "data-root": "/media/data/SEU-UUID-AQUI/docker"
+  "data-root": "/run/media/data/hd-externo-1tb/docker",
+  "runtimes": {
+    "nvidia": {
+      "args": [],
+      "path": "nvidia-container-runtime"
+    }
+  }
 }
 ```
 
 **4. Configurar o containerd — gere e edite o `config.toml`:**
-
 ```bash
 sudo mkdir -p /etc/containerd
 containerd config default | sudo tee /etc/containerd/config.toml
@@ -109,42 +109,33 @@ sudo nano /etc/containerd/config.toml
 ```
 
 Altere a linha `root` para:
-
 ```
-root = "/media/data/SEU-UUID-AQUI/containerd"
-UUID=youruuid /run/media/data/hd-externo-1tb ext4 defaults,nofail 0 2
+root = '/run/media/data/hd-externo-1tb/containerd'
 ```
 
 > Deixe a variável `state` como está — ela aponta para `/run/containerd` (memória RAM) e não deve ser alterada.
 
 **5. Mover os dados existentes para o HD (se necessário):**
-
 ```bash
-sudo rsync -aP /var/lib/docker/ /media/data/SEU-UUID-AQUI/docker/
-sudo rsync -aP /var/lib/containerd/ /media/data/SEU-UUID-AQUI/containerd/
+sudo rsync -aP /var/lib/docker/ /run/media/data/hd-externo-1tb/docker/
+sudo rsync -aP /var/lib/containerd/ /run/media/data/hd-externo-1tb/containerd/
 ```
 
 **6. Iniciar os serviços:**
-
 ```bash
 sudo systemctl start containerd && sudo systemctl start docker
 ```
 
 **7. Confirmar:**
-
 ```bash
 docker info | grep "Docker Root Dir"
 ```
 
 **8. Apagar as pastas antigas do SSD (após confirmar que está funcionando):**
-
 ```bash
 sudo rm -rf /var/lib/docker
 sudo rm -rf /var/lib/containerd
 ```
-
----
-
 ## 3. Git
 
 ### SSH
