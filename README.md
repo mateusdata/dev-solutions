@@ -163,6 +163,13 @@ Themes: https://github.com/ohmyzsh/ohmyzsh/wiki/Themes — tema recomendado: `bi
 
 **Reinstalar do zero:**
 
+Instalar: 
+
+```bash
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+```
+Instalar e instalar:
+
 ```bash
 uninstall_oh_my_zsh && rm -f ~/.zshrc && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 ```
