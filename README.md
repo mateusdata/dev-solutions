@@ -203,6 +203,10 @@ sshfs user@servidor:/caminho/remoto ./pasta_local
 ### Pendrive Bootável
 
 **Balena Etcher** — recomendado: [etcher.balena.io](https://etcher.balena.io)
+Fedora Media Writer: Ele grava ISOs de qualquer distribuição Linux perfeitamente. Você pode instalar rodando:
+
+Bash
+flatpak install flathub org.fedoraproject.MediaWriter
 
 ### Fixar Janela no Topo
 
