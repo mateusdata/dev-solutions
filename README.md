@@ -35,6 +35,7 @@
   - [Emulador travando com "Not Responding"](#emulador-travando-com-emulator-is-not-responding)
   - [JAVA_HOME não configurado](#java_home-não-configurado)
 - [8. Linux](#8-linux-troubleshooting)
+  - [Tela congelando — dual GPU NVIDIA + AMD no Wayland](#tela-congelando--dual-gpu-nvidia--amd-no-wayland)
   - [PATH quebrado — sudo e apt não encontrados](#path-quebrado--sudo-e-apt-não-encontrados)
 
 ---
@@ -399,6 +400,37 @@ java -version
 ---
 
 ## 8. Linux Troubleshooting
+
+### Tela congelando — dual GPU NVIDIA + AMD no Wayland
+
+**Problema:** Sistema congela completamente (tela trava, mouse/teclado não respondem), forçando desligar no botão físico. Causado por conflito entre driver NVIDIA e iGPU AMD com Wayland.
+
+**Desabilitar a iGPU AMD:**
+
+```bash
+echo "blacklist amdgpu" | sudo tee /etc/modprobe.d/blacklist-amdgpu.conf
+sudo update-initramfs -u
+sudo reboot
+```
+
+**Ativar modeset da NVIDIA (necessário pro Wayland):**
+
+```bash
+echo "options nvidia-drm modeset=1" | sudo tee /etc/modprobe.d/nvidia-drm.conf
+sudo update-initramfs -u
+sudo reboot
+```
+
+**Desfazer (voltar ao padrão):**
+
+```bash
+sudo rm /etc/modprobe.d/blacklist-amdgpu.conf
+sudo rm /etc/modprobe.d/nvidia-drm.conf
+sudo update-initramfs -u
+sudo reboot
+```
+
+---
 
 ### PATH quebrado — sudo e apt não encontrados
 
