@@ -29,7 +29,7 @@
 - [6. Bluetooth & Controles](#6-bluetooth--controles)
   - [DualShock 4 no Linux Mint](#dualshock-4-no-linux-mint-223)
 
-### Troubleshooting
+### Solução de problemas
 
 - [7. Mobile](#7-mobile-troubleshooting)
   - [Emulador travando com "Not Responding"](#emulador-travando-com-emulator-is-not-responding)
