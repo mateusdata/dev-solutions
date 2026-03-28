@@ -201,6 +201,20 @@ sudo apt install openssh-server
 sshfs user@servidor:/caminho/remoto ./pasta_local
 ```
 
+### Modo Texto (sem interface gráfica)
+```bash
+# desativar (persistente)
+sudo systemctl set-default multi-user.target
+
+# ativar (persistente)
+sudo systemctl set-default graphical.target
+
+# desativar (temporário)
+sudo systemctl isolate multi-user.target
+```
+
+> No Linux Mint: `sudo systemctl disable lightdm` / `enable lightdm`
+
 ### Pendrive Bootável
 
 **Balena Etcher** — recomendado: [etcher.balena.io](https://etcher.balena.io)
