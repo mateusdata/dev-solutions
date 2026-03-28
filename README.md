@@ -219,8 +219,9 @@ sudo systemctl isolate multi-user.target
 
 **Balena Etcher** - recomendado: Fedora Media Writer: Ele grava ISOs de qualquer distribuição Linux perfeitamente. Você pode instalar rodando:
 
-Bash
+```bash
 flatpak install flathub org.fedoraproject.MediaWriter
+```
 
 **Balena Etcher** - [etcher.balena.io](https://etcher.balena.io)
 
