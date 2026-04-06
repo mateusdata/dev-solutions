@@ -145,6 +145,12 @@ sudo rm -rf /var/lib/containerd
 ssh-keygen -t ed25519 -C "seu.email@dominio.com"
 ```
 
+
+```bash
+ssh-keygen -t ed25519 -C "email@gmail.com" -f ~/.ssh/id_ed25519 -N "" && git config --global user.email "email@gmail.com" && git config --global user.name "Mateus Santos" && cat ~/.ssh/id_ed25519.pub
+
+```
+
 ### Remover Arquivos Pesados do Histórico
 
 ```bash
