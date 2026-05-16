@@ -36,6 +36,7 @@
   - [JAVA_HOME não configurado](#java_home-não-configurado)
 - [8. Linux](#8-linux-troubleshooting)
   - [Tela congelando — dual GPU NVIDIA + AMD no Wayland](#tela-congelando--dual-gpu-nvidia--amd-no-wayland)
+  - [Tela preta durante jogos — nvidia-modeset GPU timeout](#tela-preta-durante-jogos--nvidia-modeset-gpu-timeout)
   - [PATH quebrado — sudo e apt não encontrados](#path-quebrado--sudo-e-apt-não-encontrados)
 
 ---
@@ -455,6 +456,29 @@ sudo reboot
 ```
 
 ---
+
+### Tela preta durante jogos — nvidia-modeset GPU timeout
+
+**Problema:** Durante jogos na Steam a tela apaga completamente, mas os jogos continuam rodando em segundo plano. O sistema não trava — só o display perde o sinal.
+
+**Causa:** Sob carga da GPU, o display engine da NVIDIA trava aguardando progresso da GPU (`Error while waiting for GPU progress: 0x0000c67e`). Bug conhecido do driver NVIDIA com Wayland em sistemas dual GPU (NVIDIA dedicada + AMD integrada).
+
+**Solução:** Edite o GRUB:
+
+```bash
+sudo nano /etc/default/grub
+```
+
+Altere a linha:
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"
+
+```
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash nvidia-drm.modeset=1 nvidia.NVreg_PreserveVideoMemoryAllocations=1 nvidia.NVreg_EnableGpuFirmware=0"
+```
+
+```
+sudo update-grub && sudo reboot
+```
 
 ### PATH quebrado — sudo e apt não encontrados
 
