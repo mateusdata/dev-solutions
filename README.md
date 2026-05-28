@@ -75,7 +75,26 @@ docker system prune -a --volumes -f && docker builder prune -a -f
 
 ### Docker no HD Externo
 
+
 O Docker é composto por dois serviços independentes que precisam ser configurados separadamente: o **dockerd** e o **containerd**. Se você configurar apenas um deles, o outro continuará gravando no SSD sem que você perceba.
+
+markdown**0. Garantir montagem correta do HD no fstab:**
+```bash
+sudo mkdir -p /run/media/data/hd-externo-1tb
+sudo nano /etc/fstab
+```
+Adicione:
+UUID=aa377c86-d063-47d9-b91d-9ad912d09fab  /run/media/data/hd-externo-1tb  ext4  defaults,nofail,x-systemd.automount  0  2
+Corrigir permissões após montar:
+```bash
+sudo chmod 755 /run/media/data/
+sudo chown $USER:$USER /run/media/data/hd-externo-1tb
+```
+Testar:
+```bash
+sudo systemctl daemon-reload
+sudo mount -a
+```
 
 **1. Verificar onde o HD está montado:**
 ```bash
