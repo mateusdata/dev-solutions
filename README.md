@@ -28,6 +28,8 @@
   - [Hashcat](#hashcat)
 - [6. Bluetooth & Controles](#6-bluetooth--controles)
   - [DualShock 4 no Linux Mint](#dualshock-4-no-linux-mint-223)
+  - [Teste de Polling Rate (Gamepadla)](#teste-de-polling-rate-gamepadla)
+  - [Overclock de Controle USB (1000Hz)](#overclock-de-controle-usb-1000hz)
 
 ### Solução de problemas
 
@@ -349,6 +351,31 @@ ls /dev/input/js*
 ```
 
 > No Linux Mint 23.x nenhuma dessas configurações é necessária — o padrão já funciona.
+
+### Teste de Polling Rate (Gamepadla)
+
+Para testar a latência real e o polling rate do controle via USB ou Bluetooth:
+
+```bash
+# Baixar o projeto
+git clone https://github.com/cakama3a/Polling.git ~/Downloads/Polling
+# Executar o teste via uv (Python)
+cd ~/Downloads/Polling && uv run python Python.py
+```
+
+### Overclock de Controle USB (1000Hz)
+
+Para forçar a porta USB a solicitar dados a 1ms (1000Hz), utilize o módulo do kernel `usb_oc-dkms`. Exemplo para DualShock 4 (`054c:09cc`):
+
+```bash
+curl -Lo /tmp/usb-oc-dkms.deb https://github.com/p0358/usb_oc-dkms/releases/download/v1.1/usb-oc-dkms_1.1_amd64.deb
+sudo apt install -y /tmp/usb-oc-dkms.deb
+echo "options usb_oc interrupt_interval_override=054c:09cc:1" | sudo tee /etc/modprobe.d/usb_oc.conf
+echo "usb_oc" | sudo tee /etc/modules-load.d/usb_oc.conf
+sudo modprobe usb_oc
+```
+
+> **Nota:** Desconecte e conecte o cabo USB para aplicar. Para desligar o overclock temporariamente (caso cause instabilidade), use `sudo modprobe -r usb_oc`.
 
 ---
 
