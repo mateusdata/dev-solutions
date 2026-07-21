@@ -70,7 +70,7 @@ alias lp='sudo sync && echo 3 | sudo tee /proc/sys/vm/drop_caches'
 
 ### Limpeza de Cache
 ```bash
-docker system prune -a --volumes -f && docker builder prune -a -f 
+docker rm -f $(docker ps -aq) 2>/dev/null; docker rmi -f $(docker images -aq) 2>/dev/null; docker volume rm $(docker volume ls -q) 2>/dev/null && docker network prune -f && docker system prune -a --volumes -f && docker system df 
 ```
 
 > Libera o espaço do cache de build inútil instantaneamente.
