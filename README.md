@@ -40,6 +40,7 @@
   - [Tela congelando — dual GPU NVIDIA + AMD no Wayland](#tela-congelando--dual-gpu-nvidia--amd-no-wayland)
   - [Tela preta durante jogos — nvidia-modeset GPU timeout](#tela-preta-durante-jogos--nvidia-modeset-gpu-timeout)
   - [PATH quebrado — sudo e apt não encontrados](#path-quebrado--sudo-e-apt-não-encontrados)
+  - [Erro ENOSPC — Limite de file watchers atingido (inotify)](#erro-enospc--limite-de-file-watchers-atingido-inotify)
 
 ---
 
@@ -549,3 +550,59 @@ export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
 3. Reinicie o sistema após a instalação.
 
 > ⚠️ **Prevenção:** Nunca confirme um `apt autoremove` sem revisar a lista completa do que será removido. Se aparecer `gnome-session`, `gnome-shell` ou `xwayland` na lista, cancele com `n`.
+
+---
+
+### Erro ENOSPC — Limite de file watchers atingido (inotify)
+
+**Problema:**
+
+```
+Error: ENOSPC: System limit for number of file watchers reached
+```
+
+**Causa:** O bundler do Expo/Metro (ou ferramentas como VS Code/Vite) tenta monitorar arquivos do projeto e o limite padrão de `inotify` watchers do kernel Linux foi atingido.
+
+**Verificar limite atual:**
+
+```bash
+cat /proc/sys/fs/inotify/max_user_watches
+```
+
+**Aumentar temporariamente:**
+
+```bash
+sudo sysctl fs.inotify.max_user_watches=524288
+sudo sysctl fs.inotify.max_user_instances=1024
+```
+
+**Tornar permanente:**
+
+Crie ou edite o arquivo `/etc/sysctl.d/99-inotify.conf`:
+
+```bash
+sudo nano /etc/sysctl.d/99-inotify.conf
+```
+
+Adicione o conteúdo:
+
+```ini
+fs.inotify.max_user_watches=524288
+fs.inotify.max_user_instances=1024
+fs.inotify.max_queued_events=32768
+```
+
+Aplique as alterações:
+
+```bash
+sudo sysctl --system
+# ou
+sudo sysctl -p /etc/sysctl.d/99-inotify.conf
+```
+
+**Confirmar:**
+
+```bash
+cat /proc/sys/fs/inotify/max_user_watches
+# Deve retornar: 524288
+```
