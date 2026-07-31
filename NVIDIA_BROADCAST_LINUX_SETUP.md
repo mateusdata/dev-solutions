@@ -35,23 +35,30 @@ _VIRTUAL_CAMERA_MARKERS = (
 ---
 
 ### B. Seleção Automática na Interface no Arquivo `src/nvbroadcast/ui/window.py`
-Originalmente, se o aplicativo iniciasse sem uma câmera previamente gravada na configuração, o campo **Source** ficava unselected em `(None)`.
+Originalmente, se o aplicativo iniciasse sem uma câmera ou microfone previamente salvos, o seletor de microfone marcava a opção mutada `Loopback Analog Stereo` por padrão em vez do microfone físico.
 
-**1ª Modificação (Linhas 2115 a 2119):**
+**Correção da Câmera (Linhas 2115 a 2119):**
 
 ```python
-# CÓDIGO ORIGINAL (Antes):
-def _populate_devices(self):
-    cameras = list_camera_devices()
-    if cameras:
-        self._camera_selector.set_devices(cameras)
-
-# CÓDIGO ATUALIZADO (Depois):
 def _populate_devices(self):
     cameras = list_camera_devices()
     if cameras:
         self._camera_selector.set_devices(cameras)
         self._camera_selector.set_selected_index(0)
+```
+
+**Correção do Microfone (Linhas 1665 a 1680):**
+
+```python
+def _populate_mics(self):
+    mics = self._app.list_microphones()
+    self._mic_selector.set_devices(mics)
+    # Ignora o Loopback virtual e seleciona o microfone físico Fifine
+    for i, m in enumerate(mics):
+        if "loopback" not in m.get("device", "").lower():
+            self._mic_selector.set_selected_index(i)
+            self._app.set_microphone(m.get("device", ""))
+            break
 ```
 
 **2ª Modificação (Linhas 2269 a 2279):**
