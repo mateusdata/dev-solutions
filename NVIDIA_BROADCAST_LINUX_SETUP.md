@@ -79,6 +79,13 @@ if devices:
 
 ---
 
+### C. Manutenção do Áudio Ativo em Tempo Real (`auto_idle = False`)
+- **Arquivos:** `src/nvbroadcast/core/config.py` e `src/nvbroadcast/audio/pipeline.py`
+- **Modificação:** O parâmetro padrão `auto_idle` (economia de energia do áudio) foi alterado de `True` para `False`.
+- **Motivo:** Quando `auto_idle = True`, o pipeline de captura do microfone pausava automaticamente quando nenhum aplicativo externo (como Zoom ou Meet) estava gravando áudio da porta virtual. Isso fazia com que o medidor de decibéis na interface do NV Broadcast ficasse congelado em `-60 dB` (mudo). Com `auto_idle = False`, o microfone Fifine e o medidor de decibéis permanecem ativos e atualizando continuamente em tempo real na tela.
+
+---
+
 ## 2. Solução do Problema do Microfone Fifine (Áudio em -60 dB)
 
 ### O Problema:
