@@ -615,17 +615,12 @@ cat /proc/sys/fs/inotify/max_user_watches
 - **Repositório do Criador Original:** [Hkshoonya/nvidia-broadcast-linux](https://github.com/Hkshoonya/nvidia-broadcast-linux.git)
 - **Documentação Técnica Completa:** [NVIDIA_BROADCAST_LINUX_SETUP.md](./NVIDIA_BROADCAST_LINUX_SETUP.md)
 
-#### Resumo da Solução e Conflito Corrigido:
-- **Problema:** A instalação padrão do NVIDIA Broadcast tentava reconfigurar o módulo `v4l2loopback` para apenas 1 porta (`video_nr=10`), derrubando a porta `/dev/video0` do **Iriun Webcam** com o erro `Initialization failed. v4l2loopback missing`.
-- **Filtro de Código Corrigido:** Em `src/nvbroadcast/video/virtual_camera.py`, a palavra `v4l2loopback` foi removida de `_VIRTUAL_CAMERA_MARKERS` para permitir a detecção da câmera do Iriun. Em `src/nvbroadcast/ui/window.py`, foi ativada a seleção automática `set_selected_index(0)`.
-- **Modo Temporário (Recomendado):**
-  ```bash
-  sudo modprobe -r v4l2loopback
-  sudo modprobe v4l2loopback devices=2 video_nr=0,10 card_label="Iriun Webcam","NVbroadcast" exclusive_caps=1,1 max_buffers=4
-  cd /home/data/projects/nvidia-broadcast-linux
-  .venv/bin/python -m nvbroadcast
-  ```
-- **Modo Permanente:**
+#### Resumo da Solução:
+- **Onde as correções foram feitas:** Diretamente no código-fonte Python do projeto clonado em `/home/data/projects/nvidia-broadcast-linux`.
+  - `src/nvbroadcast/video/virtual_camera.py`: Liberada a detecção do Iriun Webcam (`/dev/video0`).
+  - `src/nvbroadcast/ui/window.py`: Ativada a seleção automática do Iriun ao abrir a janela.
+  - Ícone de atalho (`~/.local/share/applications/nvbroadcast.desktop`) e alias (`nvbc`) apontam para a versão corrigida.
+- **Modo Permanente (Ativado no Boot):**
   ```bash
   sudo bash -c 'echo "options v4l2loopback devices=2 video_nr=0,10 card_label=\"Iriun Webcam\",\"NVbroadcast\" exclusive_caps=1,1 max_buffers=4" > /etc/modprobe.d/v4l2loopback.conf'
   sudo bash -c 'echo "v4l2loopback" > /etc/modules-load.d/v4l2loopback.conf'
