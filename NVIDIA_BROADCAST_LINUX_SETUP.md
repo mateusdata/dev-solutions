@@ -176,3 +176,21 @@ Todas as 28 imagens de fundo estão disponíveis em:
 
 - **Reuniões e Escritórios:** `office_minimalist.jpg`, `office_executive.jpg`, `office_bookshelf.jpg`, `office_scandinavian.jpg`, `studio_dark.jpg`, `office_loft.jpg`, `office_modern_desk.jpg`, `office_tech.jpg`, `office_corporate.jpg`, `office_glass.jpg`.
 - **Vídeos para o YouTube & Lives:** `youtube_neon_studio.jpg`, `youtube_streamer_room.jpg`, `podcast_studio.jpg`, `developer_tech_setup.jpg`, `dark_library.jpg`, `creative_bright_studio.jpg`, `modern_architecture.jpg`, `modern_villa_interior.jpg`, `video_recording_suite.jpg`, `scandinavian_living.jpg`, `cozy_living_room.jpg`, `minimalist_plants.jpg`, `dark_aesthetic_studio.jpg`, `lounge_coffee_space.jpg`, `startup_meeting_room.jpg`.
+
+---
+
+## 7. Alternativas Open-Source ao Iriun Webcam (Android e iPhone / iOS)
+
+### A. scrcpy (100% Open-Source para Android via USB em 1080p/4K @ 60 FPS)
+- **Vantagem:** Não precisa instalar nenhum aplicativo no celular. Usa a câmera nativa do Android via protocolo ADB USB com baixíssima latência e sem limites de qualidade.
+- **Comando no Linux:**
+  ```bash
+  scrcpy --video-source=camera --camera-size=1920x1080 --camera-fps=60 --camera-facing=back --v4l2-sink=/dev/video0 --no-playback
+  ```
+
+### B. VDO.Ninja (100% Open-Source e Gratuito para iPhone / iOS e Android)
+- **Vantagem:** Funciona em iPhones sem instalar nenhum aplicativo da App Store (roda nativamente via WebRTC no navegador Safari do iOS).
+- **Latência:** Entre 30 ms e 80 ms (imperceptível) em Full HD 1080p / 60 FPS.
+- **Passo a Passo de Uso:**
+  1. **No iPhone/Celular:** Abra o **Safari**, acesse `https://vdo.ninja`, toque em **`Add your Camera to OBS`**, permita o acesso à câmera e toque em **`Start`**.
+  2. **No PC Linux:** Acesse o link de visualização gerado (`https://vdo.ninja/?view=NOME_UNICO`).
