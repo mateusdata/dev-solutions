@@ -93,6 +93,15 @@ if devices:
 
 ---
 
+### E. Correção Automática do Perfil do Microfone Fifine (`devices.py`)
+- **Arquivo:** `src/nvbroadcast/audio/devices.py`
+- **Diagnóstico:** O Linux criava dois perfis para o microfone Fifine:
+  1. `fifine Microphone Digital Stereo (IEC958)` — Porta S/PDIF digital fictícia (sem sinal físico de som, resultando em `-60 dB`).
+  2. `fifine Microphone Analog Stereo` — Porta analógica física real por onde passa o som da voz.
+- **Modificação:** Adicionada uma verificação em `list_microphones()` que força o PipeWire (`pactl set-card-profile`) a ativar a porta analógica física real e remove a porta digital fictícia `iec958` da seleção.
+
+---
+
 ## 2. Solução do Problema do Microfone Fifine (Áudio em -60 dB)
 
 ### O Problema:
