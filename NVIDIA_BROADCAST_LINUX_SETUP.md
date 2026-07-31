@@ -5,18 +5,98 @@
 
 ---
 
-## 1. Entendendo as Alterações no Código-Fonte
+## 1. Explicação Detalhada das Alterações no Código-Fonte
 
-As correções para o NVIDIA Broadcast funcionar com o Iriun Webcam foram feitas **diretamente no código-fonte Python do projeto clonado em `/home/data/projects/nvidia-broadcast-linux`**:
+As modificações para o NVIDIA Broadcast funcionar com o Iriun Webcam foram realizadas diretamente no código-fonte Python localizado em `/home/data/projects/nvidia-broadcast-linux`:
 
-1. **`src/nvbroadcast/video/virtual_camera.py`**: Removida a trava genérica `v4l2loopback` da tupla `_VIRTUAL_CAMERA_MARKERS`. Isso permite que o aplicativo reconheça o **Iriun Webcam** (`/dev/video0`) na lista de entradas (**Source**), mantendo oculta apenas a sua própria saída de vídeo (`NVbroadcast`).
-2. **`src/nvbroadcast/ui/window.py`**: Adicionada a instrução `set_selected_index(0)` para forçar a interface gráfica a selecionar o **Iriun Webcam** automaticamente ao abrir, sem deixar em `(None)`.
+### A. Liberação da Câmera no Arquivo `src/nvbroadcast/video/virtual_camera.py`
+O código original usava a trava genérica `v4l2loopback` para esconder câmeras virtuais de saída. Como o Iriun se identifica no sistema como `Iriun Webcam (platform:v4l2loopback-000)`, a função de busca ocultava a entrada do Iriun.
 
-> **Importante:** Se você abrir uma versão oficial não modificada sem essas alterações de código, o Iriun Webcam não aparecerá na lista de entradas. Por isso, o ícone no menu do sistema (`~/.local/share/applications/nvbroadcast.desktop`) e o alias `nvbc` foram apontados para o código atualizado na pasta `/home/data/projects/nvidia-broadcast-linux`.
+**Trecho modificado (Linhas 27 a 33):**
+
+```python
+# CÓDIGO ORIGINAL (Antes):
+_VIRTUAL_CAMERA_MARKERS = (
+    "v4l2loopback",
+    "nvidia broadcast",
+    "nvbroadcast",
+    "obs virtual camera",
+)
+
+# CÓDIGO ATUALIZADO (Depois):
+_VIRTUAL_CAMERA_MARKERS = (
+    "nvidia broadcast",
+    "nvbroadcast",
+    "obs virtual camera",
+)
+```
+* **Efeito:** Ao remover `"v4l2loopback"` da tupla, a função `list_camera_devices()` passou a reconhecer o Iriun Webcam (`/dev/video0`) na lista de seleção (**Source**), mantendo bloqueada apenas a saída própria do app (`NVbroadcast`).
 
 ---
 
-## 2. Configuração Permanente (Ativada no Sistema)
+### B. Seleção Automática na Interface no Arquivo `src/nvbroadcast/ui/window.py`
+Originalmente, se o aplicativo iniciasse sem uma câmera previamente gravada na configuração, o campo **Source** ficava unselected em `(None)`.
+
+**1ª Modificação (Linhas 2115 a 2119):**
+
+```python
+# CÓDIGO ORIGINAL (Antes):
+def _populate_devices(self):
+    cameras = list_camera_devices()
+    if cameras:
+        self._camera_selector.set_devices(cameras)
+
+# CÓDIGO ATUALIZADO (Depois):
+def _populate_devices(self):
+    cameras = list_camera_devices()
+    if cameras:
+        self._camera_selector.set_devices(cameras)
+        self._camera_selector.set_selected_index(0)
+```
+
+**2ª Modificação (Linhas 2269 a 2279):**
+
+```python
+# CÓDIGO ORIGINAL (Antes):
+camera_device = config.video.camera_device
+for i, d in enumerate(getattr(self._camera_selector, "_devices", [])):
+    if d["device"] == camera_device:
+        self._camera_selector.set_selected_index(i)
+        break
+
+# CÓDIGO ATUALIZADO (Depois):
+camera_device = config.video.camera_device
+devices = getattr(self._camera_selector, "_devices", [])
+selected_idx = 0
+for i, d in enumerate(devices):
+    if d["device"] == camera_device:
+        selected_idx = i
+        break
+if devices:
+    self._camera_selector.set_selected_index(selected_idx)
+```
+* **Efeito:** A interface gráfica agora força o seletor a marcar automaticamente a primeira câmera disponível (`index 0`), que é a **Iriun Webcam**, assim que a janela é aberta.
+
+---
+
+## 2. Solução do Problema do Microfone Fifine (Áudio em -60 dB)
+
+### O Problema:
+O indicador de áudio do microfone Fifine ficava mudo em **-60 dB** na interface do NVIDIA Broadcast.
+
+### O Motivo Técnico:
+No gerenciador de áudio do Linux (PipeWire / PulseAudio), o volume do dispositivo de captura `alsa_input.usb-3142_fifine_Microphone-00.analog-stereo` estava reduzido para apenas **20% (-41.43 dB)**. Como o volume de captura estava extremamente baixo, a funcionalidade de **AI Denoiser (DeepFilterNet)** do NVIDIA Broadcast identificou o som fraco como ruído de fundo e o suprimiu totalmente, resultando em silêncio (-60 dB).
+
+### A Solução:
+Aumentamos o volume de captura do microfone Fifine no PipeWire para 100% (0.00 dB):
+
+```bash
+pactl set-source-volume alsa_input.usb-3142_fifine_Microphone-00.analog-stereo 100%
+```
+
+---
+
+## 3. Configuração Permanente (Ativada no Sistema)
 
 Com a **solução permanente**, você pode reiniciar o computador quantas vezes quiser. As duas portas de câmera virtuais serão criadas automaticamente pelo sistema durante o boot do Linux.
 
@@ -33,7 +113,7 @@ sudo bash -c 'echo "options v4l2loopback devices=2 video_nr=0,10 card_label=\"Ir
 
 ---
 
-## 3. Como Abrir o Aplicativo
+## 4. Como Abrir o Aplicativo
 
 Como o atalho de menu e o alias já estão configurados, você **não precisa digitar o caminho longo no terminal**:
 
@@ -42,7 +122,7 @@ Como o atalho de menu e o alias já estão configurados, você **não precisa di
 
 ---
 
-## 4. Guia de Uso em Aplicativos e Navegadores
+## 5. Guia de Uso em Aplicativos e Navegadores
 
 ```
 [ Celular ] ────(Wi-Fi/USB)────▶ [ /dev/video0: Iriun Webcam ]
@@ -66,7 +146,7 @@ Como o atalho de menu e o alias já estão configurados, você **não precisa di
 
 ---
 
-## 5. Galeria de Fundos Virtuais Adicionados (28 Imagens)
+## 6. Galeria de Fundos Virtuais Adicionados (28 Imagens)
 
 Todas as 28 imagens de fundo estão disponíveis em:
 `/home/data/projects/nvidia-broadcast-linux/.venv/share/nvbroadcast/backgrounds/`
