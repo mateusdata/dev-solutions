@@ -86,10 +86,10 @@ if devices:
 
 ---
 
-### C. Manutenção do Áudio Ativo em Tempo Real (`auto_idle = False`)
-- **Arquivos:** `src/nvbroadcast/core/config.py` e `src/nvbroadcast/audio/pipeline.py`
-- **Modificação:** O parâmetro padrão `auto_idle` (economia de energia do áudio) foi alterado de `True` para `False`.
-- **Motivo:** Quando `auto_idle = True`, o pipeline de captura do microfone pausava automaticamente quando nenhum aplicativo externo (como Zoom ou Meet) estava gravando áudio da porta virtual. Isso fazia com que o medidor de decibéis na interface do NV Broadcast ficasse congelado em `-60 dB` (mudo). Com `auto_idle = False`, o microfone Fifine e o medidor de decibéis permanecem ativos e atualizando continuamente em tempo real na tela.
+### D. Ativação do VU Meter em Tempo Real (`use_helper_process = False`)
+- **Arquivo:** `src/nvbroadcast/audio/pipeline.py`
+- **Modificação:** Alterada a variável `use_helper_process` de `True` para `False`.
+- **Motivo:** No Linux, o aplicativo tentava isolar o áudio em um subprocesso secundário (`service.py`). No entanto, esse subprocesso isolado não enviava os dados de áudio de volta para a interface gráfica, impedindo que a barra de VU meter e o medidor de decibéis fossem atualizados na tela. Ao definir `use_helper_process = False`, o áudio roda de forma direta e os decibéis passam a responder instantaneamente conforme a sua voz.
 
 ---
 
