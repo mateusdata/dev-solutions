@@ -176,6 +176,7 @@ Todas as 28 imagens de fundo estão disponíveis em:
 
 - **Reuniões e Escritórios:** `office_minimalist.jpg`, `office_executive.jpg`, `office_bookshelf.jpg`, `office_scandinavian.jpg`, `studio_dark.jpg`, `office_loft.jpg`, `office_modern_desk.jpg`, `office_tech.jpg`, `office_corporate.jpg`, `office_glass.jpg`.
 - **Vídeos para o YouTube & Lives:** `youtube_neon_studio.jpg`, `youtube_streamer_room.jpg`, `podcast_studio.jpg`, `developer_tech_setup.jpg`, `dark_library.jpg`, `creative_bright_studio.jpg`, `modern_architecture.jpg`, `modern_villa_interior.jpg`, `video_recording_suite.jpg`, `scandinavian_living.jpg`, `cozy_living_room.jpg`, `minimalist_plants.jpg`, `dark_aesthetic_studio.jpg`, `lounge_coffee_space.jpg`, `startup_meeting_room.jpg`.
+- **Molduras e Overlays Transparentes (PNG):** `transparent_cyberpunk_neon_frame.png`, `transparent_studio_light_overlay.png`, `transparent_gamer_stream_frame.png`, `transparent_minimalist_glass_border.png`, `transparent_podcast_neon_sign.png`.
 
 ---
 
@@ -194,3 +195,47 @@ Todas as 28 imagens de fundo estão disponíveis em:
 - **Passo a Passo de Uso:**
   1. **No iPhone/Celular:** Abra o **Safari**, acesse `https://vdo.ninja`, toque em **`Add your Camera to OBS`**, permita o acesso à câmera e toque em **`Start`**.
   2. **No PC Linux:** Acesse o link de visualização gerado (`https://vdo.ninja/?view=NOME_UNICO`).
+
+---
+
+## 8. Integração Avançada: VDO.Ninja + OBS Studio + NVIDIA Broadcast (Técnica das 2 Cenas)
+
+Para usar o VDO.Ninja junto com os efeitos de IA do NVIDIA Broadcast no OBS sem gerar loops de vídeo ou travamento de câmera, utiliza-se a técnica de **Cena Oculta de Saída**:
+
+### Arquitetura do Fluxo de Vídeo:
+```
+[ Celular / VDO.Ninja ]
+         │
+         ▼
+[ OBS: Cena "Câmera Original" ] ──(Câmera Virtual: Scene Output)──▶ [ /dev/video0 ]
+                                                                            │
+                                                                            ▼
+                                                                   [ NVIDIA Broadcast ]
+                                                                 (Efeitos IA / Fundo)
+                                                                            │
+                                                                            ▼
+                                                                   [ /dev/video10 ]
+                                                                            │
+                                                                            ▼
+[ OBS: Cena Principal ] ◀──────(Dispositivo de Captura de Vídeo)───────────┘
+```
+
+### Configuração Passo a Passo no OBS Studio:
+
+1. **Criar a Cena da Câmera Limpa (`Câmera Original`):**
+   - No OBS, crie uma nova cena chamada `Câmera Original`.
+   - Adicione uma fonte do tipo **Browser** com a URL do VDO.Ninja e ajuste para `1920x1080`.
+   - Dê dois cliques na fonte `Browser`, desça até o final e **desmarque**:
+     - `Shutdown source when not visible` (Desativar fonte quando invisível)
+     - `Refresh browser when scene becomes active` (Atualizar o navegador quando a cena se tornar ativa)
+
+2. **Configurar a Câmera Virtual do OBS para Transmitir a Cena Oculta:**
+   - No painel de **Controls** (canto inferior direito), clique na **engrenagem ⚙️** ao lado de *Start Virtual Camera*.
+   - Mude **Output Type** para `Scene`.
+   - Em **Output Selection**, selecione `Câmera Original`.
+   - Clique em **OK** e depois em **Start Virtual Camera**.
+
+3. **Montar a Cena Principal de Transmissão:**
+   - Volte para a sua cena principal (`Scene`).
+   - Adicione uma nova fonte do tipo **Dispositivo de Captura de Vídeo (V4L2)** selecionando `/dev/video10` (`NVbroadcast`).
+   - Agora você pode posicionar sua câmera com fundo recortado/blur na tela do OBS sem quebrar a transmissão nem gerar loops de vídeo!
