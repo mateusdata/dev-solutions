@@ -239,3 +239,51 @@ Para usar o VDO.Ninja junto com os efeitos de IA do NVIDIA Broadcast no OBS sem 
    - Volte para a sua cena principal (`Scene`).
    - Adicione uma nova fonte do tipo **Dispositivo de Captura de Vídeo (V4L2)** selecionando `/dev/video10` (`NVbroadcast`).
    - Agora você pode posicionar sua câmera com fundo recortado/blur na tela do OBS sem quebrar a transmissão nem gerar loops de vídeo!
+
+---
+
+## 9. Arquitetura Nativa Leve: Google Meet + OBS Studio + 2ª Câmera Virtual (`/dev/video1`)
+
+Esta arquitetura dispensa o uso de softwares pesados proprietários e utiliza o próprio motor WebGL do **Google Meet** no navegador para trocar o fundo da câmera em 60 FPS, transmitindo a imagem tratada para a gravação no OBS Studio e para outros programas (Zoom, WhatsApp Web, Discord) através de uma 2ª Câmera Virtual.
+
+```
+[ Celular / VDO.Ninja ] ──▶ [ OBS: Cena "cameras" ] ──(Câmera Virtual 1: /dev/video0)──▶ [ Google Meet ]
+                                                                                               │
+                                                                                    (Aplica Fundo Virtual)
+                                                                                               │
+                                                                                               ▼
+[ Zoom / WhatsApp / Apps ] ◄──(Câmera Virtual 2: /dev/video1) ◄──[ OBS: Window Capture ] ◄──────┘
+```
+
+### A. Configuração das 2 Câmeras Virtuais Permanentes no Linux
+Para garantir que o Linux inicie sempre com as duas portas ativas no boot (`/dev/video0` para o celular limpo e `/dev/video1` para a imagem tratada do Meet):
+
+1. **Editar o arquivo de opções do driver (`/etc/modprobe.d/iriunwebcam-options.conf`):**
+   ```bash
+   sudo bash -c 'echo "options v4l2loopback exclusive_caps=1,1 devices=2 video_nr=0,1 card_label=\"Iriun Webcam\",\"Segunda Camera\"" > /etc/modprobe.d/iriunwebcam-options.conf'
+   ```
+
+2. **Recarregar o driver na sessão atual:**
+   ```bash
+   sudo modprobe -r v4l2loopback 2>/dev/null || true && sudo modprobe v4l2loopback
+   ```
+
+### B. Passo a Passo no OBS Studio:
+
+1. **Cena 1 (`cameras`):**
+   - Adicione a fonte **Browser** com a URL do VDO.Ninja (`1920x1080`).
+   - Na engrenagem **⚙️** ao lado de *Start Virtual Camera*, defina **Output Type**: `Scene` e **Output Selection**: `cameras`.
+   - Clique em **Start Virtual Camera** (envia o sinal para a `/dev/video0` - `Iriun Webcam`).
+
+2. **Google Meet:**
+   - Entre no Meet e escolha a câmera `Iriun Webcam` (`/dev/video0`).
+   - Escolha o fundo virtual/desfoque nativo do Meet.
+
+3. **Cena 2 (`Scene` - Gravação e Transmissão):**
+   - Adicione a fonte **Window Capture (PipeWire)** selecionando a janela do Google Meet.
+   - Segure **Alt** e arraste as bordas para recortar apenas o retângulo do seu vídeo.
+   - Para transmitir essa imagem do Meet para outros aplicativos (Zoom, WhatsApp Web, Discord):
+     1. Clique com botão direito na fonte **Window Capture (PipeWire)** ➔ **Filters** (Filtros).
+     2. Adicione o filtro **V4L2 Dedicated Output**.
+     3. Selecione o dispositivo `/dev/video1` (`Segunda Camera`) e clique em **Start**.
+
