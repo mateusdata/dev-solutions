@@ -43,7 +43,6 @@
   - [PATH quebrado — sudo e apt não encontrados](#path-quebrado--sudo-e-apt-não-encontrados)
   - [Erro ENOSPC — Limite de file watchers atingido (inotify)](#erro-enospc--limite-de-file-watchers-atingido-inotify)
   - [Ícone de engrenagem/catraca duplicado no Ubuntu Dock (StartupWMClass)](#ícone-de-engrenagemcatraca-duplicado-no-ubuntu-dock-startupwmclass)
-  - [NVIDIA Broadcast + Iriun Webcam (Setup & Troubleshooting)](./NVIDIA_BROADCAST_LINUX_SETUP.md)
 
 ---
 
@@ -641,41 +640,18 @@ cat /proc/sys/fs/inotify/max_user_watches
 
 ---
 
-### NVIDIA Broadcast para Linux + Iriun Webcam
-
-- **Repositório do Criador Original:** [Hkshoonya/nvidia-broadcast-linux](https://github.com/Hkshoonya/nvidia-broadcast-linux.git)
-- **Documentação Técnica Completa:** [NVIDIA_BROADCAST_LINUX_SETUP.md](./NVIDIA_BROADCAST_LINUX_SETUP.md)
-
-#### Resumo da Solução:
-- **Onde as correções foram feitas:** Diretamente no código-fonte Python do projeto clonado em `/home/data/projects/nvidia-broadcast-linux`.
-  - `src/nvbroadcast/video/virtual_camera.py`: Liberada a detecção do Iriun Webcam (`/dev/video0`).
-  - `src/nvbroadcast/ui/window.py`: Ativada a seleção automática do Iriun ao abrir a janela.
-  - Ícone de atalho (`~/.local/share/applications/nvbroadcast.desktop`) e alias (`nvbc`) apontam para a versão corrigida.
-- **Modo Permanente (Ativado no Boot):**
-  ```bash
-  sudo bash -c 'echo "options v4l2loopback devices=2 video_nr=0,10 card_label=\"Iriun Webcam\",\"NVbroadcast\" exclusive_caps=1,1 max_buffers=4" > /etc/modprobe.d/v4l2loopback.conf'
-  sudo bash -c 'echo "v4l2loopback" > /etc/modules-load.d/v4l2loopback.conf'
-  ```
-- **Remover Modo Permanente:**
-  ```bash
-  sudo rm -f /etc/modprobe.d/v4l2loopback.conf /etc/modules-load.d/v4l2loopback.conf
-  ```
-
----
-
 ### Ícone de engrenagem/catraca duplicado no Ubuntu Dock (StartupWMClass)
 
 **Problema:** Ao fixar um atalho na barra lateral do Ubuntu (GNOME Dash / Ubuntu Dock) e abrir o aplicativo, o ícone fixado não exibe o ponto azul de execução e um segundo ícone genérico com formato de engrenagem/catraca cinza é gerado no final da barra.
 
 **Causa:** O gerenciador de janelas do GNOME associa a janela em execução ao seu respectivo lançador `.desktop` através da propriedade `WM_CLASS`. Se o arquivo `.desktop` não declarar explicitamente a diretiva `StartupWMClass`, o sistema não consegue vincular a janela aberta ao ícone fixado e cria um inicializador temporário com o ícone genérico de ferramenta/engrenagem.
 
-**Como identificar a classe de janela (`WM_CLASS`):**
+**Como descobrir a classe da janela (`wmclass` / `app_id`):**
 
-Execute no terminal e clique sobre a janela do aplicativo aberto:
-
-```bash
-xprop WM_CLASS
-```
+1. Pressione `Alt + F2`.
+2. Digite `lg` e pressione `Enter` para abrir o *Looking Glass* do GNOME.
+3. Clique na aba **Windows** e localize o aplicativo aberto na lista para ver o campo **`wmclass`** (ou `app_id`).
+4. Pressione `Esc` (ou clique no `X` no canto superior direito) para fechar o Looking Glass.
 
 **Solução 1 — Atualizar o arquivo `.desktop` no terminal:**
 
@@ -718,4 +694,5 @@ update-desktop-database ~/.local/share/applications/
 3. No campo do nome da chave, preencha: `StartupWMClass`.
 4. No campo do valor, informe a classe da janela (exemplo: `antigravity-ide` ou `antigravity`).
 5. Salve as alterações.
+
 
