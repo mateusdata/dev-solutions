@@ -1,6 +1,6 @@
 # Linux & Dev Handbook
 
-> Referência pessoal de setup, configurações e troubleshooting.
+> Referência pessoal de setup, configurações e troubleshooting para desenvolvimento e administração Linux.
 
 ---
 
@@ -8,41 +8,50 @@
 
 ### Setup & Configuração
 
-- [1. Mobile](#1-mobile)
-  - [Android SDK no Zsh](#android-sdk-no-zsh)
-  - [Alias — Liberar RAM](#alias--liberar-ram)
-- [2. Docker](#2-docker)
-  - [Limpeza de Cache](#limpeza-de-cache)
-  - [Docker no HD Externo](#docker-no-hd-externo)
-- [3. Git](#3-git)
-  - [SSH](#ssh)
-  - [Remover Arquivos Pesados do Histórico](#remover-arquivos-pesados-do-histórico)
-- [4. Linux](#4-linux)
-  - [Oh My Zsh](#oh-my-zsh)
-  - [SSH & Acesso Remoto](#ssh--acesso-remoto)
-  - [Pendrive Bootável](#pendrive-bootável)
-  - [Fixar Janela no Topo](#fixar-janela-no-topo)
-  - [Atalhos de Teclado no Linux Mint](#atalhos-de-teclado-no-linux-mint)
-  - [Lançadores & Atalhos Desktop (PinApp & .desktop)](#lançadores--atalhos-desktop-pinapp--desktop)
-- [5. Hardware & Armazenamento](#5-hardware--armazenamento)
-  - [Montagem Automática de Discos](#montagem-automática-de-discos)
-  - [Hashcat](#hashcat)
-- [6. Bluetooth & Controles](#6-bluetooth--controles)
-  - [DualShock 4 no Linux Mint](#dualshock-4-no-linux-mint-223)
-  - [Teste de Polling Rate (Gamepadla)](#teste-de-polling-rate-gamepadla)
-  - [Overclock de Controle USB (1000Hz)](#overclock-de-controle-usb-1000hz)
+* **[1. Mobile](#1-mobile)**
+  * [`Android SDK no Zsh`](#android-sdk-no-zsh)
+  * [`Alias — Liberar RAM`](#alias--liberar-ram)
 
-### Solução de problemas
+* **[2. Docker](#2-docker)**
+  * [`Limpeza de Cache`](#limpeza-de-cache)
+  * [`Docker no HD Externo`](#docker-no-hd-externo)
 
-- [7. Mobile](#7-mobile-troubleshooting)
-  - [Emulador travando com "Not Responding"](#emulador-travando-com-emulator-is-not-responding)
-  - [JAVA_HOME não configurado](#java_home-não-configurado)
-- [8. Linux](#8-linux-troubleshooting)
-  - [Tela congelando — dual GPU NVIDIA + AMD no Wayland](#tela-congelando--dual-gpu-nvidia--amd-no-wayland)
-  - [Tela preta durante jogos — nvidia-modeset GPU timeout](#tela-preta-durante-jogos--nvidia-modeset-gpu-timeout)
-  - [PATH quebrado — sudo e apt não encontrados](#path-quebrado--sudo-e-apt-não-encontrados)
-  - [Erro ENOSPC — Limite de file watchers atingido (inotify)](#erro-enospc--limite-de-file-watchers-atingido-inotify)
-  - [Ícone de engrenagem/catraca duplicado no Ubuntu Dock (StartupWMClass)](#ícone-de-engrenagemcatraca-duplicado-no-ubuntu-dock-startupwmclass)
+* **[3. Git](#3-git)**
+  * [`SSH`](#ssh)
+  * [`Remover Arquivos Pesados do Histórico`](#remover-arquivos-pesados-do-histórico)
+
+* **[4. Linux](#4-linux)**
+  * [`Oh My Zsh`](#oh-my-zsh)
+  * [`SSH & Acesso Remoto`](#ssh--acesso-remoto)
+  * [`Modo Texto (sem interface gráfica)`](#modo-texto-sem-interface-gráfica)
+  * [`Pendrive Bootável`](#pendrive-bootável)
+  * [`Fixar Janela no Topo`](#fixar-janela-no-topo)
+  * [`Atalhos de Teclado no Linux Mint`](#atalhos-de-teclado-no-linux-mint)
+  * [`Lançadores & Atalhos Desktop (PinApp & .desktop)`](#lançadores--atalhos-desktop-pinapp--desktop)
+
+* **[5. Hardware & Armazenamento](#5-hardware--armazenamento)**
+  * [`Montagem Automática de Discos`](#montagem-automática-de-discos)
+  * [`Hashcat`](#hashcat)
+
+* **[6. Bluetooth & Controles](#6-bluetooth--controles)**
+  * [`DualShock 4 no Linux Mint 22.3`](#dualshock-4-no-linux-mint-223)
+  * [`Teste de Polling Rate (Gamepadla)`](#teste-de-polling-rate-gamepadla)
+  * [`Overclock de Controle USB (1000Hz)`](#overclock-de-controle-usb-1000hz)
+
+---
+
+### Solução de Problemas
+
+* **[7. Mobile Troubleshooting](#7-mobile-troubleshooting)**
+  * [`Emulador travando com "Emulator is Not Responding"`](#emulador-travando-com-emulator-is-not-responding)
+  * [`JAVA_HOME não configurado`](#java_home-não-configurado)
+
+* **[8. Linux Troubleshooting](#8-linux-troubleshooting)**
+  * [`Tela congelando — dual GPU NVIDIA + AMD no Wayland`](#tela-congelando--dual-gpu-nvidia--amd-no-wayland)
+  * [`Tela preta durante jogos — nvidia-modeset GPU timeout`](#tela-preta-durante-jogos--nvidia-modeset-gpu-timeout)
+  * [`PATH quebrado — sudo e apt não encontrados`](#path-quebrado--sudo-e-apt-não-encontrados)
+  * [`Erro ENOSPC — Limite de file watchers atingido (inotify)`](#erro-enospc--limite-de-file-watchers-atingido-inotify)
+  * [`Ícone de engrenagem/catraca duplicado no Ubuntu Dock (StartupWMClass)`](#ícone-de-engrenagemcatraca-duplicado-no-ubuntu-dock-startupwmclass)
 
 ---
 
@@ -83,13 +92,15 @@ docker rm -f $(docker ps -aq) 2>/dev/null; docker rmi -f $(docker images -aq) 2>
 
 O Docker é composto por dois serviços independentes que precisam ser configurados separadamente: o **dockerd** e o **containerd**. Se você configurar apenas um deles, o outro continuará gravando no SSD sem que você perceba.
 
-markdown**0. Garantir montagem correta do HD no fstab:**
+**0. Garantir montagem correta do HD no fstab:**
 ```bash
 sudo mkdir -p /run/media/data/hd-externo-1tb
 sudo nano /etc/fstab
 ```
 Adicione:
-UUID=aa377c86-d063-47d9-b91d-9ad912d09fab  /run/media/data/hd-externo-1tb  ext4  defaults,nofail,x-systemd.automount  0  2
+```text
+UUID=aa377c86-d063-47d9-b91d-9ad912d09fab /run/media/data/hd-externo-1tb ext4 defaults,nofail,x-systemd.automount 0 2
+```
 Corrigir permissões após montar:
 ```bash
 sudo chmod 755 /run/media/data/
@@ -135,7 +146,7 @@ sudo nano /etc/containerd/config.toml
 ```
 
 Altere a linha `root` para:
-```
+```text
 root = '/run/media/data/hd-externo-1tb/containerd'
 ```
 
@@ -262,8 +273,8 @@ flatpak install flathub org.fedoraproject.MediaWriter
 
 ```bash
 sudo apt install wmctrl
-wmctrl -r :SELECT: -b add,above     # fixar
-wmctrl -r :SELECT: -b remove,above  # desfixar
+wmctrl -r :SELECT: -b add,above
+wmctrl -r :SELECT: -b remove,above
 ```
 
 ### Atalhos de Teclado no Linux Mint
@@ -311,15 +322,14 @@ update-desktop-database ~/.local/share/applications/
 ### Montagem Automática de Discos
 
 ```bash
-sudo blkid  # descobrir UUID
+sudo blkid
 sudo nano /etc/fstab
 ```
 
 Adicione a linha:
 
-```
+```text
 UUID=your_UUID /run/media/data/hd-externo-1tb ext4 defaults,nofail 0 2
-
 ```
 
 ### Hashcat
@@ -346,7 +356,7 @@ sudo nano /etc/bluetooth/input.conf
 
 Mude para:
 
-```
+```text
 ClassicBondedOnly=false
 ```
 
@@ -362,7 +372,7 @@ sudo nano /etc/bluetooth/main.conf
 
 Na seção `[Policy]`, deixe assim:
 
-```
+```text
 AutoEnable=true
 ReconnectAttempts=7
 ReconnectIntervals=1,2,4,8,16,32,64
@@ -379,7 +389,6 @@ Verifique se o controle foi reconhecido:
 
 ```bash
 ls /dev/input/js*
-# Deve retornar: /dev/input/js0
 ```
 
 > No Linux Mint 23.x nenhuma dessas configurações é necessária — o padrão já funciona.
@@ -389,9 +398,7 @@ ls /dev/input/js*
 Para testar a latência real e o polling rate do controle via USB ou Bluetooth:
 
 ```bash
-# Baixar o projeto
 git clone https://github.com/cakama3a/Polling.git ~/Downloads/Polling
-# Executar o teste via uv (Python)
 cd ~/Downloads/Polling && uv run python Python.py
 ```
 
@@ -436,8 +443,8 @@ gsettings set org.gnome.mutter check-alive-timeout 20000
 Verificar qual tá ativo agora:
 ```bash
 gsettings get org.gnome.mutter check-alive-timeout
-
 ```
+
 **Solução2:** Abra o `config.ini` do AVD:
 ```bash
 nano ~/.android/avd/NOME_DO_SEU_AVD.avd/config.ini
@@ -445,25 +452,25 @@ nano ~/.android/avd/NOME_DO_SEU_AVD.avd/config.ini
 
 Localize e altere:
 
-```
+```text
 hw.gpu.mode=auto
 ```
 
 Para:
 
-```
+```text
 hw.gpu.mode=host
 ```
 
 Salve com **Ctrl+O** → Enter → **Ctrl+X**, feche e reabra o emulador.
 
-# Adicionar ao grupo kvm
+Adicione o usuário ao grupo kvm:
+```bash
 sudo usermod -aG kvm $USER
-
-# Confirmar
 groups
-> Com `host`, o emulador usa diretamente a GPU real do sistema, eliminando os travamentos causados pela renderização por software.
+```
 
+> Com `host`, o emulador usa diretamente a GPU real do sistema, eliminando os travamentos causados pela renderização por software.
 
 ---
 
@@ -471,7 +478,7 @@ groups
 
 **Problema:**
 
-```
+```text
 ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
 ```
 
@@ -548,13 +555,12 @@ sudo nano /etc/default/grub
 ```
 
 Altere a linha:
-GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"
 
-```
+```text
 GRUB_CMDLINE_LINUX_DEFAULT="quiet splash nvidia-drm.modeset=1 nvidia.NVreg_PreserveVideoMemoryAllocations=1 nvidia.NVreg_EnableGpuFirmware=0"
 ```
 
-```
+```bash
 sudo update-grub && sudo reboot
 ```
 
@@ -580,7 +586,7 @@ export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
 
 3. Reinicie o sistema após a instalação.
 
-> ⚠️ **Prevenção:** Nunca confirme um `apt autoremove` sem revisar a lista completa do que será removido. Se aparecer `gnome-session`, `gnome-shell` ou `xwayland` na lista, cancele com `n`.
+> Prevenção: Nunca confirme um `apt autoremove` sem revisar a lista completa do que será removido. Se aparecer `gnome-session`, `gnome-shell` ou `xwayland` na lista, cancele com `n`.
 
 ---
 
@@ -588,7 +594,7 @@ export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
 
 **Problema:**
 
-```
+```text
 Error: ENOSPC: System limit for number of file watchers reached
 ```
 
@@ -627,15 +633,12 @@ Aplique as alterações:
 
 ```bash
 sudo sysctl --system
-# ou
-sudo sysctl -p /etc/sysctl.d/99-inotify.conf
 ```
 
 **Confirmar:**
 
 ```bash
 cat /proc/sys/fs/inotify/max_user_watches
-# Deve retornar: 524288
 ```
 
 ---
@@ -694,5 +697,3 @@ update-desktop-database ~/.local/share/applications/
 3. No campo do nome da chave, preencha: `StartupWMClass`.
 4. No campo do valor, informe a classe da janela (exemplo: `antigravity-ide` ou `antigravity`).
 5. Salve as alterações.
-
-
