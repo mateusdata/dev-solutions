@@ -1,0 +1,677 @@
+# Linux & Dev Handbook
+
+> Referência pessoal de setup, configurações e troubleshooting para desenvolvimento e administração Linux.
+
+---
+
+## Tabela de Conteúdos
+
+### Setup & Configuração
+
+| Módulo | Descrição do Setup | Atalhos Rápidos |
+| :--- | :--- | :--- |
+| [**1. Mobile**](#1-mobile) | Variáveis de ambiente & Otimização de RAM | [`Android SDK no Zsh`](#android-sdk-no-zsh) • [`Alias — Liberar RAM`](#alias--liberar-ram) |
+| [**2. Docker**](#2-docker) | Limpeza de cache & Armazenamento externo | [`Limpeza de Cache`](#limpeza-de-cache) • [`Docker no HD Externo`](#docker-no-hd-externo) |
+| [**3. Git**](#3-git) | Chaves criptográficas & Higienização do repo | [`SSH ED25519`](#ssh) • [`Remover Arquivos Pesados`](#remover-arquivos-pesados-do-histórico) |
+| [**4. Linux**](#4-linux) | Shell, produtividade & Lançadores desktop | [`Oh My Zsh`](#oh-my-zsh) • [`SSH Remoto`](#ssh--acesso-remoto) • [`Modo Texto`](#modo-texto-sem-interface-gráfica) • [`Pendrive Bootável`](#pendrive-bootável) • [`Fixar Janela`](#fixar-janela-no-topo) • [`Atalhos de Teclado`](#atalhos-de-teclado-no-linux-mint) • [`Lançadores (.desktop)`](#lançadores--atalhos-desktop-pinapp--desktop) |
+| [**5. Hardware**](#5-hardware--armazenamento) | Armazenamento persistente & Utilitários | [`Montagem Automática (fstab)`](#montagem-automática-de-discos) • [`Hashcat`](#hashcat) |
+| [**6. Controles**](#6-bluetooth--controles) | Conectividade Bluetooth & Modding HID | [`DualShock 4`](#dualshock-4-no-linux-mint-223) • [`Polling Rate`](#teste-de-polling-rate-gamepadla) • [`Overclock USB (1000Hz)`](#overclock-de-controle-usb-1000hz) |
+
+---
+
+### Solução de Problemas (Troubleshooting)
+
+| Módulo | Problema Identificado | Procedimento de Correção |
+| :--- | :--- | :--- |
+| [**7. Mobile**](#7-mobile-troubleshooting) | Emulador travando ("Not Responding") | [`Ajuste Host GPU & KVM`](#emulador-travando-com-emulator-is-not-responding) |
+| | JAVA_HOME não configurado | [`Instalação & Export OpenJDK`](#java_home-não-configurado) |
+| [**8. Linux**](#8-linux-troubleshooting) | Congelamento com Dual GPU (NVIDIA + AMD) | [`Blacklist & Modeset`](#tela-congelando--dual-gpu-nvidia--amd-no-wayland) |
+| | Tela preta durante jogos (GPU Timeout) | [`Ajuste no GRUB`](#tela-preta-durante-jogos--nvidia-modeset-gpu-timeout) |
+| | PATH do sistema quebrado após remoção | [`Restauração de Emergência`](#path-quebrado--sudo-e-apt-não-encontrados) |
+| | Limite de file watchers atingido (ENOSPC) | [`Aumento do inotify`](#erro-enospc--limite-de-file-watchers-atingido-inotify) |
+| | Ícone duplicado de engrenagem no Dock | [`Correção StartupWMClass`](#ícone-de-engrenagemcatraca-duplicado-no-ubuntu-dock-startupwmclass) |
+
+---
+
+## Setup & Configuração
+
+---
+
+## 1. Mobile
+
+### Android SDK no Zsh
+
+Adicione ao `~/.zshrc`:
+
+```bash
+export ANDROID_HOME=$HOME/Android/Sdk
+export PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
+```
+
+### Alias — Liberar RAM
+
+```bash
+alias lp='sudo sync && echo 3 | sudo tee /proc/sys/vm/drop_caches'
+```
+
+---
+
+## 2. Docker
+
+### Limpeza de Cache
+```bash
+docker rm -f $(docker ps -aq) 2>/dev/null; docker rmi -f $(docker images -aq) 2>/dev/null; docker volume rm $(docker volume ls -q) 2>/dev/null && docker network prune -f && docker system prune -a --volumes -f && docker system df 
+```
+
+> Libera o espaço do cache de build inútil instantaneamente.
+
+### Docker no HD Externo
+
+
+O Docker é composto por dois serviços independentes que precisam ser configurados separadamente: o **dockerd** e o **containerd**. Se você configurar apenas um deles, o outro continuará gravando no SSD sem que você perceba.
+
+**0. Garantir montagem correta do HD no fstab:**
+```bash
+sudo mkdir -p /run/media/data/hd-externo-1tb
+sudo nano /etc/fstab
+```
+Adicione:
+```text
+UUID=aa377c86-d063-47d9-b91d-9ad912d09fab /run/media/data/hd-externo-1tb ext4 defaults,nofail,x-systemd.automount 0 2
+```
+Corrigir permissões após montar:
+```bash
+sudo chmod 755 /run/media/data/
+sudo chown $USER:$USER /run/media/data/hd-externo-1tb
+```
+Testar:
+```bash
+sudo systemctl daemon-reload
+sudo mount -a
+```
+
+**1. Verificar onde o HD está montado:**
+```bash
+df -h
+```
+
+**2. Parar os serviços:**
+```bash
+sudo systemctl stop docker docker.socket containerd
+```
+
+**3. Configurar o Docker — edite `/etc/docker/daemon.json`:**
+```bash
+sudo nano /etc/docker/daemon.json
+```
+```json
+{
+  "data-root": "/run/media/data/hd-externo-1tb/docker",
+  "runtimes": {
+    "nvidia": {
+      "args": [],
+      "path": "nvidia-container-runtime"
+    }
+  }
+}
+```
+
+**4. Configurar o containerd — gere e edite o `config.toml`:**
+```bash
+sudo mkdir -p /etc/containerd
+containerd config default | sudo tee /etc/containerd/config.toml
+sudo nano /etc/containerd/config.toml
+```
+
+Altere a linha `root` para:
+```text
+root = '/run/media/data/hd-externo-1tb/containerd'
+```
+
+> Deixe a variável `state` como está — ela aponta para `/run/containerd` (memória RAM) e não deve ser alterada.
+
+**5. Mover os dados existentes para o HD (se necessário):**
+```bash
+sudo rsync -aP /var/lib/docker/ /run/media/data/hd-externo-1tb/docker/
+sudo rsync -aP /var/lib/containerd/ /run/media/data/hd-externo-1tb/containerd/
+```
+
+**6. Iniciar os serviços:**
+```bash
+sudo systemctl start containerd && sudo systemctl start docker
+```
+
+**7. Confirmar:**
+```bash
+docker info | grep "Docker Root Dir"
+```
+
+**8. Apagar as pastas antigas do SSD (após confirmar que está funcionando):**
+```bash
+sudo rm -rf /var/lib/docker
+sudo rm -rf /var/lib/containerd
+```
+## 3. Git
+
+### SSH
+
+```bash
+ssh-keygen -t ed25519 -C "seu.email@dominio.com"
+```
+
+
+```bash
+ssh-keygen -t ed25519 -C "email@gmail.com" -f ~/.ssh/id_ed25519 -N "" && git config --global user.email "email@gmail.com" && git config --global user.name "Mateus Santos" && cat ~/.ssh/id_ed25519.pub
+
+```
+
+### Remover Arquivos Pesados do Histórico
+
+```bash
+git filter-branch --force --index-filter "git rm --cached --ignore-unmatch *.apk *.aab *.img *.jpg *.pdf *.mp4" --prune-empty --tag-name-filter cat -- --all
+git reflog expire --expire=now --all
+git gc --prune=now --aggressive
+git push origin --force --all
+```
+
+---
+
+## 4. Linux
+
+### Oh My Zsh
+
+Themes: https://github.com/ohmyzsh/ohmyzsh/wiki/Themes — tema recomendado: `bira`
+
+**Reinstalar do zero:**
+
+Instalar: 
+
+```bash
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+```
+Instalar e instalar:
+
+```bash
+uninstall_oh_my_zsh && rm -f ~/.zshrc && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+```
+
+**Autosuggestions:**
+
+```bash
+git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions && sed -i 's/plugins=(git)/plugins=(git zsh-autosuggestions)/' ~/.zshrc && source ~/.zshrc
+```
+
+macOS:
+
+```bash
+git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions && sed -i '' 's/plugins=(git)/plugins=(git zsh-autosuggestions)/' ~/.zshrc && source ~/.zshrc
+```
+
+**Mudar shell padrão:**
+
+```bash
+chsh -s $(which zsh)
+sudo chsh -s $(which zsh) root
+```
+
+### SSH & Acesso Remoto
+
+```bash
+sudo apt install openssh-server
+sshfs user@servidor:/caminho/remoto ./pasta_local
+```
+
+### Modo Texto (sem interface gráfica)
+```bash
+# desativar (persistente)
+sudo systemctl set-default multi-user.target
+
+# ativar (persistente)
+sudo systemctl set-default graphical.target
+
+# desativar (temporário)
+sudo systemctl isolate multi-user.target
+```
+
+> No Linux Mint: `sudo systemctl disable lightdm` / `enable lightdm`
+
+### Pendrive Bootável
+
+**Balena Etcher** - recomendado: Fedora Media Writer: Ele grava ISOs de qualquer distribuição Linux perfeitamente. Você pode instalar rodando:
+
+```bash
+flatpak install flathub org.fedoraproject.MediaWriter
+```
+
+**Balena Etcher** - [etcher.balena.io](https://etcher.balena.io)
+
+
+
+### Fixar Janela no Topo
+
+```bash
+sudo apt install wmctrl
+wmctrl -r :SELECT: -b add,above
+wmctrl -r :SELECT: -b remove,above
+```
+
+### Atalhos de Teclado no Linux Mint
+
+1. Menu → pesquise `Teclado`
+2. Aba **Atalhos de Teclado**
+3. Clique em **Adicionar atalho personalizado**
+4. Cole o comando desejado e defina a tecla
+
+> **Dica:** Combine com o `wmctrl` acima para fixar janelas com um atalho.
+
+### Lançadores & Atalhos Desktop (PinApp & .desktop)
+
+Para criar e gerenciar inicializadores manuais de aplicativos (AppImages, binários locais, scripts) no menu e na barra lateral:
+
+**1. Via ferramenta visual PinApp (Flatpak):**
+O utilitário PinApp permite criar atalhos graficamente, salvando as configurações e ícones em:
+* Diretório de ícones: `~/.var/app/io.github.fabrialberio.pinapp/data/user-icons/`
+* Diretório de lançadores: `~/.local/share/applications/`
+
+**2. Estrutura manual de um arquivo `.desktop`:**
+Os arquivos de atalho de usuário ficam em `~/.local/share/applications/nome-do-app.desktop`:
+
+```ini
+[Desktop Entry]
+Name=NomeDoApp
+Type=Application
+Exec=/caminho/do/executavel %U
+Icon=/caminho/do/icone.png
+Terminal=false
+StartupWMClass=classe-da-janela
+Categories=Development;
+```
+
+Atualizar o cache de aplicativos do sistema após criar ou editar:
+
+```bash
+update-desktop-database ~/.local/share/applications/
+```
+
+---
+
+## 5. Hardware & Armazenamento
+
+### Montagem Automática de Discos
+
+```bash
+sudo blkid
+sudo nano /etc/fstab
+```
+
+Adicione a linha:
+
+```text
+UUID=your_UUID /run/media/data/hd-externo-1tb ext4 defaults,nofail 0 2
+```
+
+### Hashcat
+
+```bash
+hashcat -m 22000 arquivo.hc22000 -a 3 ?d?d?d?d?d?d?d?d
+```
+
+---
+
+## 6. Bluetooth & Controles
+
+### DualShock 4 no Linux Mint 22.3
+
+O controle conecta via Bluetooth mas o Steam não reconhece porque o BlueZ por padrão exige "bonding" completo para aceitar conexões HID. Controles genéricos e DS4 não fazem esse processo, ficando bloqueados mesmo aparecendo como conectados.
+
+**Solução 1 — Controle não reconhecido pelo Steam**
+
+Edite `/etc/bluetooth/input.conf`:
+
+```bash
+sudo nano /etc/bluetooth/input.conf
+```
+
+Mude para:
+
+```text
+ClassicBondedOnly=false
+```
+
+> **Por quê?** Com `true` (padrão), o BlueZ só aceita dispositivos HID que completaram o processo de bonding. Controles genéricos e DS4 não fazem esse processo, ficando bloqueados mesmo aparecendo como conectados.
+
+**Solução 2 — Controle não reconecta automaticamente**
+
+Edite `/etc/bluetooth/main.conf`:
+
+```bash
+sudo nano /etc/bluetooth/main.conf
+```
+
+Na seção `[Policy]`, deixe assim:
+
+```text
+AutoEnable=true
+ReconnectAttempts=7
+ReconnectIntervals=1,2,4,8,16,32,64
+ReconnectUUIDs=00001112-0000-1000-8000-00805f9b34fb,0000111f-0000-1000-8000-00805f9b34fb,0000110a-0000-1000-8000-00805f9b34fb,0000110b-0000-1000-8000-00805f9b34fb
+```
+
+Depois de qualquer alteração, reinicie:
+
+```bash
+sudo systemctl restart bluetooth
+```
+
+Verifique se o controle foi reconhecido:
+
+```bash
+ls /dev/input/js*
+```
+
+> No Linux Mint 23.x nenhuma dessas configurações é necessária — o padrão já funciona.
+
+### Teste de Polling Rate (Gamepadla)
+
+Para testar a latência real e o polling rate do controle via USB ou Bluetooth:
+
+```bash
+git clone https://github.com/cakama3a/Polling.git ~/Downloads/Polling
+cd ~/Downloads/Polling && uv run python Python.py
+```
+
+### Overclock de Controle USB (1000Hz)
+
+Para forçar a porta USB a solicitar dados a 1ms (1000Hz), utilize o módulo do kernel `usb_oc-dkms`. Exemplo para DualShock 4 (`054c:09cc`):
+
+```bash
+curl -Lo /tmp/usb-oc-dkms.deb https://github.com/p0358/usb_oc-dkms/releases/download/v1.1/usb-oc-dkms_1.1_amd64.deb
+sudo apt install -y /tmp/usb-oc-dkms.deb
+echo "options usb_oc interrupt_interval_override=054c:09cc:1" | sudo tee /etc/modprobe.d/usb_oc.conf
+echo "usb_oc" | sudo tee /etc/modules-load.d/usb_oc.conf
+sudo modprobe usb_oc
+```
+
+> **Nota:** Desconecte e conecte o cabo USB para aplicar. Para desligar o overclock temporariamente (caso cause instabilidade), use `sudo modprobe -r usb_oc`.
+
+---
+
+## Troubleshooting
+
+---
+
+## 7. Mobile Troubleshooting
+
+### Emulador travando com "Emulator is Not Responding"
+
+**Problema:** O emulador exibe a mensagem "Emulator is Not Responding" e trava constantemente, mesmo com hardware potente.
+
+**Causa:** O `hw.gpu.mode=auto` faz o emulador hesitar entre software rendering e GPU real, ignorando a GPU dedicada e causando travamentos.
+
+**Solução1:** Aumentar o timeout de janelas do gnome:
+
+Desativar completamente (0):
+```bash
+gsettings set org.gnome.mutter check-alive-timeout 0
+```
+Voltar pra 20 segundos:
+```bash
+gsettings set org.gnome.mutter check-alive-timeout 20000
+```
+Verificar qual tá ativo agora:
+```bash
+gsettings get org.gnome.mutter check-alive-timeout
+```
+
+**Solução2:** Abra o `config.ini` do AVD:
+```bash
+nano ~/.android/avd/NOME_DO_SEU_AVD.avd/config.ini
+```
+
+Localize e altere:
+
+```text
+hw.gpu.mode=auto
+```
+
+Para:
+
+```text
+hw.gpu.mode=host
+```
+
+Salve com **Ctrl+O** → Enter → **Ctrl+X**, feche e reabra o emulador.
+
+Adicione o usuário ao grupo kvm:
+```bash
+sudo usermod -aG kvm $USER
+groups
+```
+
+> Com `host`, o emulador usa diretamente a GPU real do sistema, eliminando os travamentos causados pela renderização por software.
+
+---
+
+### JAVA_HOME não configurado
+
+**Problema:**
+
+```text
+ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
+```
+
+**Solução:**
+
+1. Instale o Java caso não tenha:
+
+```bash
+sudo apt install openjdk-17-jdk
+```
+
+2. Adicione ao `~/.zshrc` ou `~/.bashrc`:
+
+```bash
+export ANDROID_HOME=$HOME/Android/Sdk
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+export PATH=$JAVA_HOME/bin:$PATH
+```
+
+3. Aplique:
+
+```bash
+source ~/.zshrc
+java -version
+```
+
+> Se o caminho não existir, verifique com `find /usr/lib/jvm -maxdepth 1 -type d` qual versão está instalada.
+
+---
+
+## 8. Linux Troubleshooting
+
+### Tela congelando — dual GPU NVIDIA + AMD no Wayland
+
+**Problema:** Sistema congela completamente (tela trava, mouse/teclado não respondem), forçando desligar no botão físico. Causado por conflito entre driver NVIDIA e iGPU AMD com Wayland.
+
+**Desabilitar a iGPU AMD:**
+
+```bash
+echo "blacklist amdgpu" | sudo tee /etc/modprobe.d/blacklist-amdgpu.conf
+sudo update-initramfs -u
+sudo reboot
+```
+
+**Ativar modeset da NVIDIA (necessário pro Wayland):**
+
+```bash
+echo "options nvidia-drm modeset=1" | sudo tee /etc/modprobe.d/nvidia-drm.conf
+sudo update-initramfs -u
+sudo reboot
+```
+
+**Desfazer (voltar ao padrão):**
+
+```bash
+sudo rm /etc/modprobe.d/blacklist-amdgpu.conf
+sudo rm /etc/modprobe.d/nvidia-drm.conf
+sudo update-initramfs -u
+sudo reboot
+```
+
+---
+
+### Tela preta durante jogos — nvidia-modeset GPU timeout
+
+**Problema:** Durante jogos na Steam a tela apaga completamente, mas os jogos continuam rodando em segundo plano. O sistema não trava — só o display perde o sinal.
+
+**Causa:** Sob carga da GPU, o display engine da NVIDIA trava aguardando progresso da GPU (`Error while waiting for GPU progress: 0x0000c67e`). Bug conhecido do driver NVIDIA com Wayland em sistemas dual GPU (NVIDIA dedicada + AMD integrada).
+
+**Solução:** Edite o GRUB:
+
+```bash
+sudo nano /etc/default/grub
+```
+
+Altere a linha:
+
+```text
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash nvidia-drm.modeset=1 nvidia.NVreg_PreserveVideoMemoryAllocations=1 nvidia.NVreg_EnableGpuFirmware=0"
+```
+
+```bash
+sudo update-grub && sudo reboot
+```
+
+### PATH quebrado — sudo e apt não encontrados
+
+**Problema:** Após um `apt autoremove` acidental, comandos como `sudo`, `apt` e `su` param de funcionar com `command not found`.
+
+**Causa:** O autoremove removeu dependências essenciais do sistema em cascata.
+
+**Solução:**
+
+1. Restaure o PATH da sessão atual:
+
+```bash
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
+```
+
+2. Reinstale os pacotes essenciais usando o caminho completo:
+
+```bash
+/usr/bin/sudo /usr/bin/apt install ubuntu-desktop gnome-session gnome-shell
+```
+
+3. Reinicie o sistema após a instalação.
+
+> Prevenção: Nunca confirme um `apt autoremove` sem revisar a lista completa do que será removido. Se aparecer `gnome-session`, `gnome-shell` ou `xwayland` na lista, cancele com `n`.
+
+---
+
+### Erro ENOSPC — Limite de file watchers atingido (inotify)
+
+**Problema:**
+
+```text
+Error: ENOSPC: System limit for number of file watchers reached
+```
+
+**Causa:** O bundler do Expo/Metro (ou ferramentas como VS Code/Vite) tenta monitorar arquivos do projeto e o limite padrão de `inotify` watchers do kernel Linux foi atingido.
+
+**Verificar limite atual:**
+
+```bash
+cat /proc/sys/fs/inotify/max_user_watches
+```
+
+**Aumentar temporariamente:**
+
+```bash
+sudo sysctl fs.inotify.max_user_watches=524288
+sudo sysctl fs.inotify.max_user_instances=1024
+```
+
+**Tornar permanente:**
+
+Crie ou edite o arquivo `/etc/sysctl.d/99-inotify.conf`:
+
+```bash
+sudo nano /etc/sysctl.d/99-inotify.conf
+```
+
+Adicione o conteúdo:
+
+```ini
+fs.inotify.max_user_watches=524288
+fs.inotify.max_user_instances=1024
+fs.inotify.max_queued_events=32768
+```
+
+Aplique as alterações:
+
+```bash
+sudo sysctl --system
+```
+
+**Confirmar:**
+
+```bash
+cat /proc/sys/fs/inotify/max_user_watches
+```
+
+---
+
+### Ícone de engrenagem/catraca duplicado no Ubuntu Dock (StartupWMClass)
+
+**Problema:** Ao fixar um atalho na barra lateral do Ubuntu (GNOME Dash / Ubuntu Dock) e abrir o aplicativo, o ícone fixado não exibe o ponto azul de execução e um segundo ícone genérico com formato de engrenagem/catraca cinza é gerado no final da barra.
+
+**Causa:** O gerenciador de janelas do GNOME associa a janela em execução ao seu respectivo lançador `.desktop` através da propriedade `WM_CLASS`. Se o arquivo `.desktop` não declarar explicitamente a diretiva `StartupWMClass`, o sistema não consegue vincular a janela aberta ao ícone fixado e cria um inicializador temporário com o ícone genérico de ferramenta/engrenagem.
+
+**Como descobrir a classe da janela (`wmclass` / `app_id`):**
+
+1. Pressione `Alt + F2`.
+2. Digite `lg` e pressione `Enter` para abrir o *Looking Glass* do GNOME.
+3. Clique na aba **Windows** e localize o aplicativo aberto na lista para ver o campo **`wmclass`** (ou `app_id`).
+4. Pressione `Esc` (ou clique no `X` no canto superior direito) para fechar o Looking Glass.
+
+**Solução 1 — Atualizar o arquivo `.desktop` no terminal:**
+
+Adicione o parâmetro `StartupWMClass` com o valor obtido no arquivo correspondente em `~/.local/share/applications/`:
+
+Exemplo para **Antigravity IDE**:
+
+```ini
+[Desktop Entry]
+Name=AntigravityIDE
+Type=Application
+Icon=/home/data/.var/app/io.github.fabrialberio.pinapp/data/user-icons/pinned-app.svg
+Exec=/home/data/Documents/AntigravityIDE/antigravity-ide --no-sandbox %F
+StartupWMClass=antigravity-ide
+Terminal=false
+```
+
+Exemplo para **Antigravity** (Standalone):
+
+```ini
+[Desktop Entry]
+Name=Antigravity
+Type=Application
+Icon=/home/data/.var/app/io.github.fabrialberio.pinapp/data/user-icons/pinned-app-1.svg
+Exec=/home/data/Documents/Antigravity/Antigravity-x64/antigravity --no-sandbox %U
+StartupWMClass=antigravity
+Terminal=false
+```
+
+Atualize o banco de dados de atalhos do sistema:
+
+```bash
+update-desktop-database ~/.local/share/applications/
+```
+
+**Solução 2 — Configurar diretamente pelo PinApp:**
+
+1. Abra o **PinApp** e selecione o aplicativo desejado.
+2. Clique no botão **`+ Add Key`** na parte inferior.
+3. No campo do nome da chave, preencha: `StartupWMClass`.
+4. No campo do valor, informe a classe da janela (exemplo: `antigravity-ide` ou `antigravity`).
+5. Salve as alterações.
