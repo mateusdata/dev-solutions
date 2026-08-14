@@ -23,6 +23,7 @@
   - [Pendrive Bootável](#pendrive-bootável)
   - [Fixar Janela no Topo](#fixar-janela-no-topo)
   - [Atalhos de Teclado no Linux Mint](#atalhos-de-teclado-no-linux-mint)
+  - [Lançadores & Atalhos Desktop (PinApp & .desktop)](#lançadores--atalhos-desktop-pinapp--desktop)
 - [5. Hardware & Armazenamento](#5-hardware--armazenamento)
   - [Montagem Automática de Discos](#montagem-automática-de-discos)
   - [Hashcat](#hashcat)
@@ -41,6 +42,7 @@
   - [Tela preta durante jogos — nvidia-modeset GPU timeout](#tela-preta-durante-jogos--nvidia-modeset-gpu-timeout)
   - [PATH quebrado — sudo e apt não encontrados](#path-quebrado--sudo-e-apt-não-encontrados)
   - [Erro ENOSPC — Limite de file watchers atingido (inotify)](#erro-enospc--limite-de-file-watchers-atingido-inotify)
+  - [Ícone de engrenagem/catraca duplicado no Ubuntu Dock (StartupWMClass)](#ícone-de-engrenagemcatraca-duplicado-no-ubuntu-dock-startupwmclass)
   - [NVIDIA Broadcast + Iriun Webcam (Setup & Troubleshooting)](./NVIDIA_BROADCAST_LINUX_SETUP.md)
 
 ---
@@ -273,6 +275,35 @@ wmctrl -r :SELECT: -b remove,above  # desfixar
 4. Cole o comando desejado e defina a tecla
 
 > **Dica:** Combine com o `wmctrl` acima para fixar janelas com um atalho.
+
+### Lançadores & Atalhos Desktop (PinApp & .desktop)
+
+Para criar e gerenciar inicializadores manuais de aplicativos (AppImages, binários locais, scripts) no menu e na barra lateral:
+
+**1. Via ferramenta visual PinApp (Flatpak):**
+O utilitário PinApp permite criar atalhos graficamente, salvando as configurações e ícones em:
+* Diretório de ícones: `~/.var/app/io.github.fabrialberio.pinapp/data/user-icons/`
+* Diretório de lançadores: `~/.local/share/applications/`
+
+**2. Estrutura manual de um arquivo `.desktop`:**
+Os arquivos de atalho de usuário ficam em `~/.local/share/applications/nome-do-app.desktop`:
+
+```ini
+[Desktop Entry]
+Name=NomeDoApp
+Type=Application
+Exec=/caminho/do/executavel %U
+Icon=/caminho/do/icone.png
+Terminal=false
+StartupWMClass=classe-da-janela
+Categories=Development;
+```
+
+Atualizar o cache de aplicativos do sistema após criar ou editar:
+
+```bash
+update-desktop-database ~/.local/share/applications/
+```
 
 ---
 
@@ -629,3 +660,62 @@ cat /proc/sys/fs/inotify/max_user_watches
   ```bash
   sudo rm -f /etc/modprobe.d/v4l2loopback.conf /etc/modules-load.d/v4l2loopback.conf
   ```
+
+---
+
+### Ícone de engrenagem/catraca duplicado no Ubuntu Dock (StartupWMClass)
+
+**Problema:** Ao fixar um atalho na barra lateral do Ubuntu (GNOME Dash / Ubuntu Dock) e abrir o aplicativo, o ícone fixado não exibe o ponto azul de execução e um segundo ícone genérico com formato de engrenagem/catraca cinza é gerado no final da barra.
+
+**Causa:** O gerenciador de janelas do GNOME associa a janela em execução ao seu respectivo lançador `.desktop` através da propriedade `WM_CLASS`. Se o arquivo `.desktop` não declarar explicitamente a diretiva `StartupWMClass`, o sistema não consegue vincular a janela aberta ao ícone fixado e cria um inicializador temporário com o ícone genérico de ferramenta/engrenagem.
+
+**Como identificar a classe de janela (`WM_CLASS`):**
+
+Execute no terminal e clique sobre a janela do aplicativo aberto:
+
+```bash
+xprop WM_CLASS
+```
+
+**Solução 1 — Atualizar o arquivo `.desktop` no terminal:**
+
+Adicione o parâmetro `StartupWMClass` com o valor obtido no arquivo correspondente em `~/.local/share/applications/`:
+
+Exemplo para **Antigravity IDE**:
+
+```ini
+[Desktop Entry]
+Name=AntigravityIDE
+Type=Application
+Icon=/home/data/.var/app/io.github.fabrialberio.pinapp/data/user-icons/pinned-app.svg
+Exec=/home/data/Documents/AntigravityIDE/antigravity-ide --no-sandbox %F
+StartupWMClass=antigravity-ide
+Terminal=false
+```
+
+Exemplo para **Antigravity** (Standalone):
+
+```ini
+[Desktop Entry]
+Name=Antigravity
+Type=Application
+Icon=/home/data/.var/app/io.github.fabrialberio.pinapp/data/user-icons/pinned-app-1.svg
+Exec=/home/data/Documents/Antigravity/Antigravity-x64/antigravity --no-sandbox %U
+StartupWMClass=antigravity
+Terminal=false
+```
+
+Atualize o banco de dados de atalhos do sistema:
+
+```bash
+update-desktop-database ~/.local/share/applications/
+```
+
+**Solução 2 — Configurar diretamente pelo PinApp:**
+
+1. Abra o **PinApp** e selecione o aplicativo desejado.
+2. Clique no botão **`+ Add Key`** na parte inferior.
+3. No campo do nome da chave, preencha: `StartupWMClass`.
+4. No campo do valor, informe a classe da janela (exemplo: `antigravity-ide` ou `antigravity`).
+5. Salve as alterações.
+
