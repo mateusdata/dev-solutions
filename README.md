@@ -45,6 +45,7 @@
 * **[7. Mobile Troubleshooting](#7-mobile-troubleshooting)**
   * [`Emulador travando com "Emulator is Not Responding"`](#emulador-travando-com-emulator-is-not-responding)
   * [`JAVA_HOME não configurado`](#java_home-não-configurado)
+  * [`Erro de Build no Gradle — OutOfMemoryError: Metaspace`](#erro-de-build-no-gradle--outofmemoryerror-metaspace)
 
 * **[8. Linux Troubleshooting](#8-linux-troubleshooting)**
   * [`Tela congelando — dual GPU NVIDIA + AMD no Wayland`](#tela-congelando--dual-gpu-nvidia--amd-no-wayland)
@@ -506,6 +507,61 @@ java -version
 ```
 
 > Se o caminho não existir, verifique com `find /usr/lib/jvm -maxdepth 1 -type d` qual versão está instalada.
+
+---
+
+### Erro de Build no Gradle — OutOfMemoryError: Metaspace
+
+**Problema:**
+
+Durante o build do Android (`assembleRelease`, `kspReleaseKotlin` ou `lintVitalAnalyzeRelease`), a compilação falha por esgotamento de memória no Gradle:
+
+```text
+Execution failed for task ':expo-updates:kspReleaseKotlin'.
+> A failure occurred while executing com.google.devtools.ksp.gradle.KspAAWorkerAction
+   > Metaspace
+e: [ksp] java.lang.OutOfMemoryError: Metaspace
+```
+
+**Causa:**
+
+O limite padrão de memória `Metaspace` da JVM do Gradle é insuficiente para processar simultaneamente todos os módulos nativos, o compilador Kotlin e a análise de código do Android Lint.
+
+**Solução:**
+
+1. Crie ou atualize o arquivo global `~/.gradle/gradle.properties` com os limites de memória ampliados:
+
+```bash
+cat > ~/.gradle/gradle.properties << 'EOF'
+org.gradle.jvmargs=-Xmx8192m -XX:MaxMetaspaceSize=3072m -XX:+HeapDumpOnOutOfMemoryError
+kotlin.daemon.jvmargs=-Xmx3072m -XX:MaxMetaspaceSize=1536m
+EOF
+```
+
+2. Confirme o conteúdo do arquivo:
+
+```bash
+cat ~/.gradle/gradle.properties
+```
+
+Saída esperada:
+
+```text
+org.gradle.jvmargs=-Xmx8192m -XX:MaxMetaspaceSize=3072m -XX:+HeapDumpOnOutOfMemoryError
+kotlin.daemon.jvmargs=-Xmx3072m -XX:MaxMetaspaceSize=1536m
+```
+
+3. Encerre os daemons antigos do Gradle para aplicar as novas configurações:
+
+```bash
+cd android && ./gradlew --stop && cd ..
+```
+
+4. Execute o build novamente:
+
+```bash
+bunx expo run:android --variant release -d
+```
 
 ---
 
