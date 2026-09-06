@@ -1,6 +1,6 @@
-# Linux & Dev Handbook
+# Manual de Desenvolvimento & Soluções Técnicas
 
-> Referência pessoal de setup, configurações e troubleshooting para desenvolvimento e administração Linux.
+> Referência pessoal de setup, configurações de ambiente, desenvolvimento mobile, ferramentas, infraestrutura e solução de problemas técnicos.
 
 ---
 
