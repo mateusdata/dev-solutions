@@ -53,6 +53,7 @@
   * [`PATH quebrado — sudo e apt não encontrados`](#path-quebrado--sudo-e-apt-não-encontrados)
   * [`Erro ENOSPC — Limite de file watchers atingido (inotify)`](#erro-enospc--limite-de-file-watchers-atingido-inotify)
   * [`Ícone de engrenagem/catraca duplicado no Ubuntu Dock (StartupWMClass)`](#ícone-de-engrenagemcatraca-duplicado-no-ubuntu-dock-startupwmclass)
+  * [`Stremio travando/congelando a interface (UI) no Linux (NVIDIA + Wayland)`](#stremio-travandocongelando-a-interface-ui-no-linux-nvidia--wayland)
 
 ---
 
@@ -753,3 +754,42 @@ update-desktop-database ~/.local/share/applications/
 3. No campo do nome da chave, preencha: `StartupWMClass`.
 4. No campo do valor, informe a classe da janela (exemplo: `antigravity-ide` ou `antigravity`).
 5. Salve as alterações.
+
+---
+
+### Stremio travando/congelando a interface (UI) no Linux (NVIDIA + Wayland)
+
+**Problema:** Ao usar o aplicativo do Stremio no Linux (versão Flatpak com GTK4 / `stremio-linux-shell`) em placas de vídeo NVIDIA sob sessão Wayland, ao fazer rolagem rápida (*scroll*) pelas listas de filmes, séries e animes, a interface gráfica congela por completo e deixa de responder a qualquer clique ou atalho de teclado (embora o áudio/vídeo continue rodando em segundo plano). No terminal ou nos logs, é registrado o erro:
+
+```text
+ERROR stremio_linux_shell::app::webview: Failed to send message: TypeError: undefined is not a function
+```
+
+**Causa:** Conflito e *deadlock* de sincronização gráfica entre o driver proprietário da NVIDIA e o motor WebKitGTK/GTK4 com o renderizador DMA-BUF e o renderizador padrão de cenas do GTK4 (`ngl`/`vulkan`) durante a rolagem contínua de páginas pesadas na webview.
+
+**Solução — Aplicar override permanente no Flatpak:**
+
+Execute no terminal:
+
+```bash
+flatpak override --user --env=WEBKIT_DISABLE_DMABUF_RENDERER=1 --env=GSK_RENDERER=gl com.stremio.Stremio
+```
+
+**O que cada variável faz:**
+- `WEBKIT_DISABLE_DMABUF_RENDERER=1`: Desativa o renderizador DMA-BUF do WebKitGTK que trava com a GPU da NVIDIA ao rolar a página.
+- `GSK_RENDERER=gl`: Força o GTK4 a utilizar o renderizador OpenGL clássico e estável da NVIDIA em vez de renderizadores instáveis.
+
+**Testar e reiniciar:**
+
+Feche a instância travada e abra o Stremio novamente:
+
+```bash
+pkill -9 stremio
+flatpak run com.stremio.Stremio
+```
+
+*(Opcional — Plano de contingência):* Caso a distribuição ainda apresente engasgos gráficos no Wayland, é possível forçar a execução via XWayland adicionando o backend X11:
+
+```bash
+flatpak override --user --env=GDK_BACKEND=x11 com.stremio.Stremio
+```
