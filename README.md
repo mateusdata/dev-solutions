@@ -54,6 +54,7 @@
   * [`Erro ENOSPC — Limite de file watchers atingido (inotify)`](#erro-enospc--limite-de-file-watchers-atingido-inotify)
   * [`Ícone de engrenagem/catraca duplicado no Ubuntu Dock (StartupWMClass)`](#ícone-de-engrenagemcatraca-duplicado-no-ubuntu-dock-startupwmclass)
   * [`Stremio travando/congelando a interface (UI) no Linux (NVIDIA + Wayland)`](#stremio-travandocongelando-a-interface-ui-no-linux-nvidia--wayland)
+  * [`Waydroid com janela piscando em loop e alto consumo de CPU (NVIDIA)`](#waydroid-com-janela-piscando-em-loop-e-alto-consumo-de-cpu-nvidia)
 
 ---
 
@@ -793,3 +794,54 @@ flatpak run com.stremio.Stremio
 ```bash
 flatpak override --user --env=GDK_BACKEND=x11 com.stremio.Stremio
 ```
+
+---
+
+### Waydroid com janela piscando em loop e alto consumo de CPU (NVIDIA)
+
+**Problema:** A janela do Waydroid abre e fica piscando continuamente sem carregar a interface de fato, enquanto o processo `com.android.settings` (parte do Android) consome processador excessivamente em looping.
+
+**Causa:** Incompatibilidade gráfica em sistemas com placa de vídeo NVIDIA utilizando driver proprietário sob Wayland. O Waydroid tenta utilizar aceleração de GPU para desenhar a tela, mas o driver proprietário não possui compatibilidade com o pipeline gráfico utilizado pelo Android (Mesa/GBM). Como resultado, o sistema entra em um ciclo ininterrupto de falhas ao tentar renderizar a interface.
+
+**Solução:** Forçar o Waydroid a desativar a renderização por GPU e processar a interface via CPU utilizando o renderizador por software SwiftShader.
+
+1. Pare a sessão ativa do Waydroid:
+
+```bash
+waydroid session stop
+```
+
+2. Edite o arquivo de propriedades base do Waydroid:
+
+```bash
+sudo nano /var/lib/waydroid/waydroid_base.prop
+```
+
+3. Adicione a seguinte linha no final do arquivo:
+
+```text
+ro.waydroid.software_rendering=1
+```
+
+*(No nano, salve com `Ctrl+O`, tecle `Enter` e saia com `Ctrl+X`)*.
+
+4. Reinicie o container do zero e inicie a sessão:
+
+```bash
+sudo systemctl restart waydroid-container
+waydroid session start
+```
+
+Aguarde até surgir a mensagem:
+
+```text
+Android with user 0 is ready
+```
+
+5. Em outro terminal, abra a interface gráfica:
+
+```bash
+waydroid show-full-ui
+```
+
+**Resultado:** A janela abre e funciona normalmente. Como todo o processamento gráfico é feito via CPU em vez de GPU, o desempenho é mais limitado, sendo indicado para tarefas leves e menos recomendado para jogos pesados ou gráficos 3D exigentes.
