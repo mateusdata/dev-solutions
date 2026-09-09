@@ -28,6 +28,7 @@
   * [`Fixar Janela no Topo`](#fixar-janela-no-topo)
   * [`Atalhos de Teclado no Linux Mint`](#atalhos-de-teclado-no-linux-mint)
   * [`Lançadores & Atalhos Desktop (PinApp & .desktop)`](#lançadores--atalhos-desktop-pinapp--desktop)
+  * [`Controle de Brilho do Monitor (ddcutil)`](#controle-de-brilho-do-monitor-ddcutil)
 
 * **[5. Hardware & Armazenamento](#5-hardware--armazenamento)**
   * [`Montagem Automática de Discos`](#montagem-automática-de-discos)
@@ -317,6 +318,33 @@ Atualizar o cache de aplicativos do sistema após criar ou editar:
 ```bash
 update-desktop-database ~/.local/share/applications/
 ```
+
+### Controle de Brilho do Monitor (ddcutil)
+
+Controle de brilho físico do monitor via hardware (DDC/CI através do cabo HDMI/DisplayPort).
+
+**Instalação:**
+
+```bash
+sudo apt install -y ddcutil
+```
+
+**Comandos:**
+
+```bash
+# Detectar monitores conectados
+sudo ddcutil detect
+
+# Ver brilho atual (VCP 10)
+sudo ddcutil getvcp 10
+
+# Ajustar brilho (+10, -10 ou valor fixo 0-100)
+sudo ddcutil setvcp 10 + 10
+sudo ddcutil setvcp 10 - 10
+sudo ddcutil setvcp 10 60
+```
+
+> **Extensão recomendada:** `DDC Brightness Controller`
 
 ---
 
