@@ -788,6 +788,9 @@ update-desktop-database ~/.local/share/applications/
 
 ### Stremio travando/congelando a interface (UI) no Linux (NVIDIA + Wayland)
 
+> ⭐ **IMPORTANTE / TESTADO E FUNCIONANDO:**  
+> A última configuração testada que funcionou perfeitamente e resolveu em definitivo o congelamento do Stremio foi a aplicação combinada dos overrides abaixo (desativando o renderizador DMA-BUF do WebKit, forçando o renderizador OpenGL no GTK e utilizando o backend X11).
+
 **Problema:** Ao usar o aplicativo do Stremio no Linux (versão Flatpak com GTK4 / `stremio-linux-shell`) em placas de vídeo NVIDIA sob sessão Wayland, ao fazer rolagem rápida (*scroll*) pelas listas de filmes, séries e animes, a interface gráfica congela por completo e deixa de responder a qualquer clique ou atalho de teclado (embora o áudio/vídeo continue rodando em segundo plano). No terminal ou nos logs, é registrado o erro:
 
 ```text
@@ -796,17 +799,25 @@ ERROR stremio_linux_shell::app::webview: Failed to send message: TypeError: unde
 
 **Causa:** Conflito e *deadlock* de sincronização gráfica entre o driver proprietário da NVIDIA e o motor WebKitGTK/GTK4 com o renderizador DMA-BUF e o renderizador padrão de cenas do GTK4 (`ngl`/`vulkan`) durante a rolagem contínua de páginas pesadas na webview.
 
-**Solução — Aplicar override permanente no Flatpak:**
+**Solução — Aplicar overrides permanentes no Flatpak:**
 
 Execute no terminal:
 
 ```bash
 flatpak override --user --env=WEBKIT_DISABLE_DMABUF_RENDERER=1 --env=GSK_RENDERER=gl com.stremio.Stremio
+flatpak override --user --env=GDK_BACKEND=x11 com.stremio.Stremio
+```
+
+*(Ou em comando único combinando todas as variáveis):*
+
+```bash
+flatpak override --user --env=WEBKIT_DISABLE_DMABUF_RENDERER=1 --env=GSK_RENDERER=gl --env=GDK_BACKEND=x11 com.stremio.Stremio
 ```
 
 **O que cada variável faz:**
 - `WEBKIT_DISABLE_DMABUF_RENDERER=1`: Desativa o renderizador DMA-BUF do WebKitGTK que trava com a GPU da NVIDIA ao rolar a página.
 - `GSK_RENDERER=gl`: Força o GTK4 a utilizar o renderizador OpenGL clássico e estável da NVIDIA em vez de renderizadores instáveis.
+- `GDK_BACKEND=x11`: Executa a interface sobre o XWayland (X11), eliminando incompatibilidades do compositor Wayland com o WebKitGTK e a GPU NVIDIA.
 
 **Testar e reiniciar:**
 
@@ -815,12 +826,6 @@ Feche a instância travada e abra o Stremio novamente:
 ```bash
 pkill -9 stremio
 flatpak run com.stremio.Stremio
-```
-
-*(Opcional — Plano de contingência):* Caso a distribuição ainda apresente engasgos gráficos no Wayland, é possível forçar a execução via XWayland adicionando o backend X11:
-
-```bash
-flatpak override --user --env=GDK_BACKEND=x11 com.stremio.Stremio
 ```
 
 ---
