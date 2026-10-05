@@ -29,6 +29,7 @@
   * [`Atalhos de Teclado no Linux Mint`](#atalhos-de-teclado-no-linux-mint)
   * [`Lançadores & Atalhos Desktop (PinApp & .desktop)`](#lançadores--atalhos-desktop-pinapp--desktop)
   * [`Controle de Brilho do Monitor (ddcutil)`](#controle-de-brilho-do-monitor-ddcutil)
+  * [`mpv — Instância Única, Volume Inicial e Não Fechar no Fim`](#mpv--instância-única-volume-inicial-e-não-fechar-no-fim)
 
 * **[5. Hardware & Armazenamento](#5-hardware--armazenamento)**
   * [`Montagem Automática de Discos`](#montagem-automática-de-discos)
@@ -345,6 +346,59 @@ sudo ddcutil setvcp 10 60
 ```
 
 > **Extensão recomendada:** `DDC Brightness Controller`
+
+### mpv — Instância Única, Volume Inicial e Não Fechar no Fim
+
+Configuração para o mpv abrir com volume fixo, não fechar quando o vídeo termina e **substituir o vídeo atual** ao clicar em outro (em vez de abrir várias janelas).
+
+> O mpv não tem opção nativa de instância única no `mpv.conf`. A forma oficial do repositório é o `TOOLS/umpv`, que por padrão **adiciona na fila** (`append-play`). Aqui ele é alterado para `replace`.
+
+| Arquivo | Função |
+| :--- | :--- |
+| `~/.config/mpv/mpv.conf` | `volume=60` (volume inicial) e `keep-open=yes` (não fecha no fim) |
+| `~/.local/bin/umpv` | Reaproveita a janela já aberta e troca o vídeo (`replace`) |
+| `~/.local/share/applications/mpv.desktop` | Faz o duplo clique abrir pelo `umpv` |
+
+> `keep-open=yes` é necessário: no mpv 0.41 o perfil `builtin-pseudo-gui` usa `idle=once`, que fecha o player ao terminar o vídeo.
+
+**Instalação:**
+
+```bash
+# 1. mpv.conf: volume 60 e não fechar no fim do vídeo
+mkdir -p ~/.config/mpv
+printf 'volume=60\nkeep-open=yes\n' > ~/.config/mpv/mpv.conf
+
+# 2. umpv: baixar e trocar "fila" por "substituir"
+mkdir -p ~/.local/bin
+curl -L https://raw.githubusercontent.com/mpv-player/mpv/master/TOOLS/umpv -o ~/.local/bin/umpv
+chmod +x ~/.local/bin/umpv
+sed -i 's/append-play/replace/' ~/.local/bin/umpv
+
+# 3. Duplo clique abrindo pelo umpv
+mkdir -p ~/.local/share/applications
+cp /usr/share/applications/mpv.desktop ~/.local/share/applications/
+sed -i "s|^Exec=.*|Exec=$HOME/.local/bin/umpv %U|" ~/.local/share/applications/mpv.desktop
+update-desktop-database ~/.local/share/applications
+```
+
+**Conferir:**
+
+```bash
+echo "--- mpv.conf:"; cat ~/.config/mpv/mpv.conf
+echo "--- umpv:"; grep -n "loadfile" ~/.local/bin/umpv
+echo "--- atalho:"; grep -n "^Exec=" ~/.local/share/applications/mpv.desktop
+```
+
+> Feche todas as janelas do mpv antes de testar: o `umpv` só reaproveita janelas abertas por ele mesmo.
+
+**Desfazer:**
+
+```bash
+rm -f ~/.config/mpv/mpv.conf
+rm -f ~/.local/bin/umpv
+rm -f ~/.local/share/applications/mpv.desktop
+update-desktop-database ~/.local/share/applications
+```
 
 ---
 
